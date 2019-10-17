@@ -2,19 +2,14 @@
 import ply.yacc as yacc 
 # Lex のサンプルを参照する 
 from lex_test import tokens
-import math 
+import math
+import cmath
 import operator 
 from fractions import Fraction
-#G = {   '_':None,
-#        'range':range, 'list':list, 'Fraction':Fraction, 'print':print,  
-#        'eq':eq,'ne':ne,'ge':ge, 'gt':gt, 'le':le,  
-#        'sqrt':sqrt, 'sin':sin, 'cos':cos, 'tan':tan, 'exp':exp, 'log':log, 
-#        'log10':log10, 'abs':abs,'gamma':gamma, 'lgamma':lgamma, 'len':len, 'pi':pi, 'e':e,
-#        'add':add, 'sub':sub, }
 G = {'_':None, 'range':range, 'list':list, 'Fraction':Fraction, 'print':print}
 G.update(vars(operator))
 G.update(vars(math))
-
+G.update(var(cmath))
 
 #
 # 式 expression = 項 | 2項演算式 | 代入式 | f式 | lambda式 |
