@@ -9,7 +9,7 @@ from fractions import Fraction
 G = {'_':None, 'range':range, 'list':list, 'Fraction':Fraction, 'print':print}
 G.update(vars(operator))
 G.update(vars(math))
-G.update(var(cmath))
+G.update(vars(cmath))
 
 #
 # 式 expression = 項 | 2項演算式 | 代入式 | f式 | lambda式 |
