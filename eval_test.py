@@ -2,10 +2,12 @@ def eval(S, E, C, cp, R, EE):
     #print(S, E,C , cp, R, EE)
     while True:
         #print(S, E, C, cp, R, EE)
-        #print(S)
+        #print(C[cp:])
+        print(E[: - 1])
         inst = C[cp]
         #print(inst)
         if inst == 'STOP':
+            #print(S, R)
             return S[ - 1]
         cp += 1
         if inst == 'LDC':
@@ -72,6 +74,30 @@ def eval(S, E, C, cp, R, EE):
             ref = S.pop()
             t = S.pop()
             S.append(t[ref])
+        elif inst == 'TCALL': 
+            n = C[cp]
+            cp += 1
+            fn = S.pop()
+            l = S[ - n:]
+            del(S[ - n:])
+            if type(fn) == list and fn[0] == 'CL':
+                k = fn[2]
+                #print(k, l)
+                if k != [] and k[ - 1] == '..':
+                    ln =  - len(l) + len(k) - 2
+                    c = l[ln:]
+                    if ln !=  - 1:del(l[ln + 1:])
+                    l[ - 1] = c
+                    #print(l)
+                e = dict(zip(k, l))
+                #R.append([C, cp])
+                #EE.append(E)
+                E = [e] + fn[3]
+                C = fn[1] 
+                cp = 0
+            elif n == 0:S.append(fn())
+            elif n == 1:S.append(fn(l[0]))
+            else: S.append(fn( * l))
         elif inst == 'CALL': 
             n = C[cp]
             cp += 1
@@ -90,6 +116,31 @@ def eval(S, E, C, cp, R, EE):
                 e = dict(zip(k, l))
                 R.append([C, cp])
                 EE.append(E)
+                E = [e] + fn[3]
+                C = fn[1] 
+                cp = 0
+            elif n == 0:S.append(fn())
+            elif n == 1:S.append(fn(l[0]))
+            else: S.append(fn( * l))
+        elif inst == 'TAPL': 
+            n = C[cp]
+            cp += 1
+            fn, l = S[ - n ], S[ - n + 1 : - 1] + S[ - 1]
+            del(S[ - n:])
+            #print(fn, l)
+            if type(fn) == list and fn[0] == 'CL':
+                k = fn[2]
+                #print(k, l)
+                if k != [] and k[ - 1] == '..':
+                    ln =  - len(l) + len(k) - 2
+                    c = l[ln:]
+                    if ln !=  - 1:del(l[ln + 1:])
+                    l[ - 1] = c
+                #    #print(l)
+                e = dict(zip(k, l ))
+                #print(e)
+                #R.append([C, cp])
+                #EE.append(E)
                 E = [e] + fn[3]
                 C = fn[1] 
                 cp = 0
@@ -136,6 +187,15 @@ def eval(S, E, C, cp, R, EE):
                     ff = True
                     break
             if not ff:(E[0])[k] = v
+        elif inst == 'TSEL':
+            p = S.pop()
+            t_exp = C[cp]
+            f_exp = C[cp + 1]
+            cp += 2
+            #R.append([C, cp])
+            cp = 0
+            if p: C = t_exp
+            else: C = f_exp
         elif inst == 'SEL':
             p = S.pop()
             t_exp = C[cp]

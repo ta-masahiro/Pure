@@ -52,9 +52,34 @@ def p_expression_lambda(p):
                         | LAMBDA LPAREN args RPAREN expression
                         | LAMBDA LPAREN RPAREN expression
     '''
-    if      len(p) == 7: p[0] = ['LDF'] +[ p[6] + ['RTN'] ]+[p[3] + ['..']]
-    elif    len(p) == 6: p[0] = ['LDF'] +[ p[5] + ['RTN'] ]+[p[3]]
-    elif    len(p) == 5: p[0] = ['LDF'] +[ p[4] + ['RTN'] ]+[[]]
+    def tail(e):
+        #print(e)
+        if len(e)>=3 and e[ - 3] == 'CALL':
+            e[ - 3] = 'TCALL'
+            return
+        elif len(e)>=4 and e[ - 4] == 'SEL':
+            e[ - 4] = 'TSEL'
+            e[ - 2][ - 1] = 'RTN'
+            e[ - 3][ - 1] = 'RTN'
+            if e[ - 1] == 'RTN':e[ - 1] = 'STOP'
+            tail(e[ - 2])
+            tail(e[ - 3])
+            return
+        return
+
+    if      len(p) == 7:
+        e = p[6] + ['RTN']
+        tail(e)
+        p[0] = ['LDF'] +[e]+[p[3] + ['..']]
+    elif    len(p) == 6: 
+        e = p[5] + ['RTN']
+        tail(e)
+        p[0] = ['LDF'] +[e]+[p[3]]
+    elif    len(p) == 5:
+        e = p[4] + ['RTN']
+        tail(e)
+        p[0] = ['LDF'] +[e]+[[]]
+
 # lambda式の部品
 def p_args(p):
     '''
@@ -274,17 +299,17 @@ if __name__ == '__main__':
             continue
         c_time = time.time()
         #print( result)
-        try:
-            v = eval([], [G], result + ['STOP'], 0, [], [])
-            e_time = time.time()
-            if type(v) == list and v != [] and  v[0] == 'CL':print('Usser Function')
-            else:print(v)
-            print('comiling time  : ', int((1000000 * (c_time - s_time))) / 1000000)
-            print('evaluation time: ', int((1000000 * (e_time - c_time))) / 1000000)
-            G['_'] = v
-        except (KeyError, IndexError) as e:
-            print(e)
-            continue
+        #try:
+        v = eval([], [G], result + ['STOP'], 0, [], [])
+        e_time = time.time()
+        if type(v) == list and v != [] and  v[0] == 'CL':print('Usser Function')
+        else:print(v)
+        print('comiling time  : ', int((1000000 * (c_time - s_time))) / 1000000)
+        print('evaluation time: ', int((1000000 * (e_time - c_time))) / 1000000)
+        G['_'] = v
+        #except (KeyError, IndexError) as e:
+        #    print(e)
+        #    continue
         #except :
         #    print("Some Error Occured!")
         #    continue
