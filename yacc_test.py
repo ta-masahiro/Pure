@@ -6,7 +6,7 @@ import math
 import cmath
 import operator 
 from fractions import Fraction
-G = {'_':None, 'range':range, 'list':list, 'Fraction':Fraction, 'print':print}
+G = {'_':None, 'range':range, 'list':list, 'Fraction':Fraction, 'print':print, 'len':len}
 G.update(vars(operator))
 G.update(vars(math))
 G.update(vars(cmath))
@@ -133,6 +133,7 @@ def p_factor(p):
             | f_call
             | br_expr
             | mult_expression
+            | function_apply
             | function_def
             | function_if
             | function_lambda
@@ -222,7 +223,15 @@ def p_factor_def(p):
     function_def    : DEF LPAREN ID CAMMA expression RPAREN
     '''
     p[0] = p[5] + ['SET', p[3]]
-
+def p_factor_apply(p):
+    '''
+    function_apply  : APPLY LPAREN params RPAREN
+    '''
+    args = len(p[3])
+    C = []
+    for c in p[3]:
+        C = C + c
+    p[0] = C + ['APL', args]
 def p_factor_if(p):
     '''
     function_if : IF LPAREN expression CAMMA expression CAMMA expression RPAREN
@@ -259,7 +268,7 @@ if __name__ == '__main__':
         s_time = time.time()
         try:
             result = parser.parse(s)
-            #print(result)
+            print(result)
         except SyntaxError as e:
             print(e)
             continue
@@ -276,6 +285,6 @@ if __name__ == '__main__':
         except (KeyError, IndexError) as e:
             print(e)
             continue
-        except :
-            print("Some Error Occured!")
-            continue
+        #except :
+        #    print("Some Error Occured!")
+        #    continue

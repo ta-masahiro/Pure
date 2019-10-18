@@ -96,6 +96,31 @@ def eval(S, E, C, cp, R, EE):
             elif n == 0:S.append(fn())
             elif n == 1:S.append(fn(l[0]))
             else: S.append(fn( * l))
+        elif inst == 'APL': 
+            n = C[cp]
+            cp += 1
+            fn, l = S[ - n ], S[ - n + 1 : - 1] + S[ - 1]
+            del(S[ - n:])
+            #print(fn, l)
+            if type(fn) == list and fn[0] == 'CL':
+                k = fn[2]
+                #print(k, l)
+                if k != [] and k[ - 1] == '..':
+                    ln =  - len(l) + len(k) - 2
+                    c = l[ln:]
+                    if ln !=  - 1:del(l[ln + 1:])
+                    l[ - 1] = c
+                #    #print(l)
+                e = dict(zip(k, l ))
+                #print(e)
+                R.append([C, cp])
+                EE.append(E)
+                E = [e] + fn[3]
+                C = fn[1] 
+                cp = 0
+            elif n == 0:S.append(fn())
+            elif n == 1:S.append(fn(l[0]))
+            else: S.append(fn( * l))
         elif inst == 'RTN':
             E = EE.pop()
             C, cp = R.pop()

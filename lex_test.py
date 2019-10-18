@@ -2,7 +2,7 @@
 import ply.lex as lex
 from fractions import Fraction
 # トークンリスト 常に必須
-reserved = {'if':'IF', 'lambda':'LAMBDA','def':'DEF', 'True':'TRUE', 'False':'FALSE', 'is':'IS'}
+reserved = {'if':'IF', 'lambda':'LAMBDA','def':'DEF', 'True':'TRUE', 'False':'FALSE', 'is':'IS', 'apply':'APPLY'}
 tokens = ['INT', 'FLOAT','E_FLOAT','FLOAT2', 'FRACT', 'PLUS','MINUS','TIMES','POW', 'DIVIDE',
         'LPAREN','RPAREN','LBRAC', 'RBRAC','LBRAK', 'RBRAK',  'CAMMA','COL','SEMICOL','DOTS', 'LET', 
         'EQUAL','NEQ', 'GEQ', 'LEQ', 'GT', 'LT', 'NOT', 'ID'] + list(reserved.values())
@@ -36,6 +36,7 @@ t_LAMBDA = r'lambda'
 t_TRUE   = r'True'
 t_FALSE  = r'False'
 t_IS     = r'is'
+t_APPLY  = r'apply'
 
 # 正規表現とアクションコード 
 def t_E_FLOAT(t):
