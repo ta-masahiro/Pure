@@ -1,14 +1,17 @@
+import copy
 def eval(S, E, C, cp, R, EE):
     #print(S, E,C , cp, R, EE)
     while True:
-        #print(S, E, C, cp, R, EE)
-        #print(C[cp:])
-        print(E[: - 1])
         inst = C[cp]
-        #print(inst)
+        #print('S:', S)
+        #print('C:', C[cp:])i
+        #print(E[0])
+        #if not ('z' in E[0]):
+        #    print("!!!!!!!!!!!", C[cp:])
         if inst == 'STOP':
             #print(S, R)
-            return S[ - 1]
+            #return S[ - 1]
+            return S.pop()
         cp += 1
         if inst == 'LDC':
             S.append(C[cp])
@@ -20,10 +23,13 @@ def eval(S, E, C, cp, R, EE):
             for e in E:
                 try:
                     S.append(e[v])
+                    #print(v, e[v])
                 except:continue
                 ff = True
                 break
-            if not ff:raise KeyError("UnknownKey:" + v)
+            if not ff:
+                #print(C[cp:])
+                raise KeyError("UnknownKey:" + v)
         elif inst == 'MINUS':
             S[ - 1] =  - S[ - 1]
         elif inst == 'NOT':
@@ -78,8 +84,10 @@ def eval(S, E, C, cp, R, EE):
             n = C[cp]
             cp += 1
             fn = S.pop()
-            l = S[ - n:]
-            del(S[ - n:])
+            if n == 0:l = []
+            else:
+                l = copy.deepcopy(S[ - n:])
+                del(S[ - n:])
             if type(fn) == list and fn[0] == 'CL':
                 k = fn[2]
                 #print(k, l)
@@ -89,7 +97,9 @@ def eval(S, E, C, cp, R, EE):
                     if ln !=  - 1:del(l[ln + 1:])
                     l[ - 1] = c
                     #print(l)
+                #if len(k) != len(l):print("#########TCALL#####################", k, l, C[cp - 4:cp]) 
                 e = dict(zip(k, l))
+                #print(e)
                 #R.append([C, cp])
                 #EE.append(E)
                 E = [e] + fn[3]
@@ -102,8 +112,10 @@ def eval(S, E, C, cp, R, EE):
             n = C[cp]
             cp += 1
             fn = S.pop()
-            l = S[ - n:]
-            del(S[ - n:])
+            if n == 0:l = []
+            else:
+                l = copy.deepcopy(S[ - n:])
+                del(S[ - n:])
             if type(fn) == list and fn[0] == 'CL':
                 k = fn[2]
                 #print(k, l)
@@ -113,7 +125,9 @@ def eval(S, E, C, cp, R, EE):
                     if ln !=  - 1:del(l[ln + 1:])
                     l[ - 1] = c
                     #print(l)
+                #if len(k)!=len(l):print("##############CALL################", k, l, C[cp - 4:cp]) 
                 e = dict(zip(k, l))
+                #print(e)
                 R.append([C, cp])
                 EE.append(E)
                 E = [e] + fn[3]
@@ -187,6 +201,11 @@ def eval(S, E, C, cp, R, EE):
                     ff = True
                     break
             if not ff:(E[0])[k] = v
+        elif inst == 'DCL':
+            k = C[cp]
+            cp += 1
+            E[0][k] = None
+            S.append(None)
         elif inst == 'TSEL':
             p = S.pop()
             t_exp = C[cp]

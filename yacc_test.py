@@ -6,11 +6,24 @@ import math
 import cmath
 import operator 
 from fractions import Fraction
-G = {'_':None, 'range':range, 'list':list, 'Fraction':Fraction, 'print':print, 'len':len}
-G.update(vars(operator))
-G.update(vars(math))
-G.update(vars(cmath))
 
+def List( * x):return list(x)
+def List_set(L, i, v):
+    L[i] = v
+    return v
+def Dict(keys, vals):
+    return dict(zip(map(lambda x: tuple(x) if isinstance(x, list) else x, keys), vals))
+def Dict_set(D, k, v):
+    if isinstance(k, list):k = tuple(k)
+    D[k] = v
+    return v
+def Dict_ref(D, k):return D[str(k)]
+
+G = {'_':None, 'range':range, 'list':list, 'Fraction':Fraction, 'print':print, 'len':len, 'list':List, 'list_set':List_set, 'dict':Dict, 'dict_set':Dict_set, 'dict_ref':Dict_ref}
+#G.update(vars(operator))
+#G.update(vars(math))
+#G.update(vars(cmath))
+#G = {'print':print}
 #
 # 式 expression = 項 | 2項演算式 | 代入式 | f式 | lambda式 |
 #
@@ -21,6 +34,8 @@ def p_expression(p):
                 | expression_set
                 | expression_if
                 | expression_lambda
+                | expression_decl
+                | expression_function_decl 
     '''
     p[0] = p[1]
 # 2項演算式
@@ -88,6 +103,17 @@ def p_args(p):
     '''
     if      len(p) == 2: p[0] = [p[1]]
     elif    len(p) == 4: p[0] = p[1] + [p[3]]
+def p_expression_func_decl(p):
+    '''
+    expression_function_decl : DEF ID LPAREN args RPAREN LET expression
+    '''
+    p[0] = ['LDF'] +[p[7] + ['RTN']]+[p[4]] + ['SET', p[2]]
+
+def p_decl_exp(p):
+    '''
+    expression_decl : VAR ID
+    '''
+    p[0] = ['DCL', p[2]]
 # 複式 mult_expression = 式 | {式; 式; ...}
 def p_mult_expression(p):
     '''
@@ -154,14 +180,16 @@ def p_factor(p):
             | number
             | var
             | vector
+            | string
             | vect_ref
             | f_call
             | br_expr
             | mult_expression
             | function_apply
-            | function_def
+            | function_set
             | function_if
             | function_lambda
+            | call_cc
     '''
     p[0] = p[1]
 # 真偽値
@@ -188,6 +216,11 @@ def p_factor_var(p):
     var : ID
     '''
     p[0] = ['LD', p[1]]
+def p_factor_str(p):
+    '''
+    string : STR
+    '''
+    p[0] = ['LDC', p[1]]
 # ベクター
 def p_vector(p):
     '''
@@ -243,9 +276,9 @@ def p_params(p):
     '''
     if      len(p) == 4: p[0] = p[1] +[p[3]]
     elif    len(p) == 2: p[0] = [p[1]]
-def p_factor_def(p):
+def p_factor_set(p):
     '''
-    function_def    : DEF LPAREN ID CAMMA expression RPAREN
+    function_set    : SET LPAREN ID CAMMA expression RPAREN
     '''
     p[0] = p[5] + ['SET', p[3]]
 def p_factor_apply(p):
@@ -272,6 +305,11 @@ def p_factor_lambda(p):
     if      len(p) == 10: p[0] = ['LDF'] +[ p[8] + ['RTN'] ]+[p[4] + ['..']]
     elif    len(p) ==  9: p[0] = ['LDF'] +[ p[7] + ['RTN'] ]+[p[4]]
     elif    len(p) ==  8: p[0] = ['LDF'] +[ p[6] + ['RTN'] ]+[[]]
+def p_factor_callcc(p):
+    '''
+    call_cc : CALLCC LPAREN expression RPAREN
+    '''
+    p[0] = ['LDICT', '__CODE__'] + p[3] + ['CALL', 1]
 #
 # 構文エラー 
 #
@@ -304,8 +342,8 @@ if __name__ == '__main__':
         e_time = time.time()
         if type(v) == list and v != [] and  v[0] == 'CL':print('Usser Function')
         else:print(v)
-        print('comiling time  : ', int((1000000 * (c_time - s_time))) / 1000000)
-        print('evaluation time: ', int((1000000 * (e_time - c_time))) / 1000000)
+        print('c_time  : ', int((1000000 * (c_time - s_time))) / 1000000)
+        print('e_time  : ', int((1000000 * (e_time - c_time))) / 1000000)
         G['_'] = v
         #except (KeyError, IndexError) as e:
         #    print(e)

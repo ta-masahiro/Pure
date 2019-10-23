@@ -2,8 +2,8 @@
 import ply.lex as lex
 from fractions import Fraction
 # トークンリスト 常に必須
-reserved = {'if':'IF', 'lambda':'LAMBDA','def':'DEF', 'True':'TRUE', 'False':'FALSE', 'is':'IS', 'apply':'APPLY'}
-tokens = ['INT', 'FLOAT','E_FLOAT','FLOAT2', 'FRACT', 'PLUS','MINUS','TIMES','POW', 'DIVIDE',
+reserved = {'set':'SET', 'if':'IF', 'lambda':'LAMBDA','def':'DEF', 'True':'TRUE', 'False':'FALSE', 'is':'IS', 'apply':'APPLY', 'call_cc':'CALLCC', 'var':'VAR'}
+tokens = ['STR', 'INT', 'FLOAT','E_FLOAT','FLOAT2', 'FRACT', 'PLUS','MINUS','TIMES','POW', 'DIVIDE',
         'LPAREN','RPAREN','LBRAC', 'RBRAC','LBRAK', 'RBRAK',  'CAMMA','COL','SEMICOL','DOTS', 'LET', 
         'EQUAL','NEQ', 'GEQ', 'LEQ', 'GT', 'LT', 'NOT', 'ID'] + list(reserved.values())
  # 正規表現による簡単なトークンのルール 
@@ -32,11 +32,14 @@ t_LT     = r'<'
 t_NOT    = r'!'
 t_IF     = r'if'
 t_DEF    = r'def'
+t_SET    = r'set'
 t_LAMBDA = r'lambda'
 t_TRUE   = r'True'
 t_FALSE  = r'False'
 t_IS     = r'is'
 t_APPLY  = r'apply'
+t_CALLCC = r'call_cc'
+t_VAR    = r'var'
 
 # 正規表現とアクションコード 
 def t_E_FLOAT(t):
@@ -62,6 +65,10 @@ def t_INT(t):
 def t_ID(t):
     r'[a-zA-Z_]\w*'
     t.type = reserved.get(t.value, 'ID')
+    return t
+def t_STR(t):
+    r'\"([^"\n]|\\["\n])*\"'
+    t.value = (t.value)[1: - 1]
     return t
 # 行番号をたどれるように 
 def t_newline(t):
