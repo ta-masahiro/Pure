@@ -7,7 +7,6 @@ def eval(S, E, C, cp, R, EE):
         #print('C:', C[cp:])i
         #print(E[0])
         #if not ('z' in E[0]):
-        #    print("!!!!!!!!!!!", C[cp:])
         if inst == 'STOP':
             #print(S, R)
             #return S[ - 1]
@@ -97,7 +96,6 @@ def eval(S, E, C, cp, R, EE):
                     if ln !=  - 1:del(l[ln + 1:])
                     l[ - 1] = c
                     #print(l)
-                #if len(k) != len(l):print("#########TCALL#####################", k, l, C[cp - 4:cp]) 
                 e = dict(zip(k, l))
                 #print(e)
                 #R.append([C, cp])
@@ -125,7 +123,6 @@ def eval(S, E, C, cp, R, EE):
                     if ln !=  - 1:del(l[ln + 1:])
                     l[ - 1] = c
                     #print(l)
-                #if len(k)!=len(l):print("##############CALL################", k, l, C[cp - 4:cp]) 
                 e = dict(zip(k, l))
                 #print(e)
                 R.append([C, cp])
