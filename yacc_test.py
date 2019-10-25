@@ -19,6 +19,29 @@ def Dict_set(D, k, v):
     return v
 def Dict_ref(D, k):return D[str(k)]
 
+def search(ls, v):
+    for i in range(len(ls)):
+        if isinstance(ls[i], list):
+            j = search(ls[i], v)
+            if not (j is None): return [i] + j
+        elif ls[i] == v:return [i]
+    return None
+
+def tail(e):
+    #print(e)
+    if len(e)>=3 and e[ - 3] == 'CALL':
+        e[ - 3] = 'TCALL'
+        return
+    elif len(e)>=4 and e[ - 4] == 'SEL':
+        e[ - 4] = 'TSEL'
+        e[ - 2][ - 1] = 'RTN'
+        e[ - 3][ - 1] = 'RTN'
+        if e[ - 1] == 'RTN':e[ - 1] = 'STOP'
+        tail(e[ - 2])
+        tail(e[ - 3])
+        return
+    return
+
 G = {'_':None, 'range':range, 'list':list, 'Fraction':Fraction, 'print':print, 'len':len, 'list':List, 'list_set':List_set, 'dict':Dict, 'dict_set':Dict_set, 'dict_ref':Dict_ref}
 #G.update(vars(operator))
 #G.update(vars(math))
@@ -67,20 +90,20 @@ def p_expression_lambda(p):
                         | LAMBDA LPAREN args RPAREN expression
                         | LAMBDA LPAREN RPAREN expression
     '''
-    def tail(e):
-        #print(e)
-        if len(e)>=3 and e[ - 3] == 'CALL':
-            e[ - 3] = 'TCALL'
-            return
-        elif len(e)>=4 and e[ - 4] == 'SEL':
-            e[ - 4] = 'TSEL'
-            e[ - 2][ - 1] = 'RTN'
-            e[ - 3][ - 1] = 'RTN'
-            if e[ - 1] == 'RTN':e[ - 1] = 'STOP'
-            tail(e[ - 2])
-            tail(e[ - 3])
-            return
-        return
+    #def tail(e):
+    #    #print(e)
+    #    if len(e)>=3 and e[ - 3] == 'CALL':
+    #        e[ - 3] = 'TCALL'
+    #        return
+    #    elif len(e)>=4 and e[ - 4] == 'SEL':
+    #        e[ - 4] = 'TSEL'
+    #        e[ - 2][ - 1] = 'RTN'
+    #        e[ - 3][ - 1] = 'RTN'
+    #        if e[ - 1] == 'RTN':e[ - 1] = 'STOP'
+    #        tail(e[ - 2])
+    #        tail(e[ - 3])
+    #        return
+    #    return
 
     if      len(p) == 7:
         e = p[6] + ['RTN']
@@ -125,9 +148,11 @@ def p_lieft_mult_exp(p):
     '''
     left_mult_exp   : left_mult_exp SEMICOL expression
                     | LBRAC expression
+                    | LBRAC
     '''
     if      len(p) == 4: p[0] = p[1] + ['POP'] + p[3]
     elif    len(p) == 3: p[0] = p[2]  
+    else:    p[0] = ['LDC', None]
 #
 # 項 = 要素 | 項 2項演算子 要素 | 単項演算子 要素 
 #
@@ -331,14 +356,29 @@ if __name__ == '__main__':
         s_time = time.time()
         try:
             result = parser.parse(s)
-            print(result)
+            #print(result)
         except SyntaxError as e:
             print(e)
             continue
+        #
+        # call_ccの処理
+        #
+        q = result + ['STOP']
+        qq = q
+        t = search(q, '__CODE__')
+        while not (t is None):
+            #print(t)
+            for i in range(len(t) - 1):
+                q = q[t[i]]
+            #print(q[t[ - 1]:])
+            q[t[ - 1]] = q[t[ - 1] + 6:]
+            t = search(qq, '__CODE__')
+        print(qq)
         c_time = time.time()
         #print( result)
         #try:
-        v = eval([], [G], result + ['STOP'], 0, [], [])
+        #v = eval([], [G], result + ['STOP'], 0, [], [])
+        v = eval([], [G], qq, 0, [], [])
         e_time = time.time()
         if type(v) == list and v != [] and  v[0] == 'CL':print('Usser Function')
         else:print(v)

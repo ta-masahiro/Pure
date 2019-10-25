@@ -103,6 +103,9 @@ def eval(S, E, C, cp, R, EE):
                 E = [e] + fn[3]
                 C = fn[1] 
                 cp = 0
+            elif type(fn) == list and fn[0] == 'CONT':
+                S, E, C, R, EE = fn[1] + l, fn[2][:], fn[3], fn[4][:], fn[5][:]
+                cp = 0
             elif n == 0:S.append(fn())
             elif n == 1:S.append(fn(l[0]))
             else: S.append(fn( * l))
@@ -130,6 +133,10 @@ def eval(S, E, C, cp, R, EE):
                 E = [e] + fn[3]
                 C = fn[1] 
                 cp = 0
+            elif type(fn) == list and fn[0] == 'CONT':
+                S, E, C, R, EE = fn[1] + l, fn[2][:], fn[3], fn[4][:], fn[5][:]
+                #print(fn[2])
+                cp = 0
             elif n == 0:S.append(fn())
             elif n == 1:S.append(fn(l[0]))
             else: S.append(fn( * l))
@@ -155,6 +162,9 @@ def eval(S, E, C, cp, R, EE):
                 E = [e] + fn[3]
                 C = fn[1] 
                 cp = 0
+            elif type(fn) == list and fn[0] == 'CONT':
+                S, E, C, R, EE = fn[1] + l, fn[2][:], fn[3], fn[4][:], fn[5][:]
+                cp = 0
             elif n == 0:S.append(fn())
             elif n == 1:S.append(fn(l[0]))
             else: S.append(fn( * l))
@@ -179,6 +189,9 @@ def eval(S, E, C, cp, R, EE):
                 EE.append(E)
                 E = [e] + fn[3]
                 C = fn[1] 
+                cp = 0
+            elif type(fn) == list and fn[0] == 'CONT':
+                S, E, C, R, EE = fn[1] + l, fn[2][:], fn[3], fn[4][:], fn[5][:]
                 cp = 0
             elif n == 0:S.append(fn())
             elif n == 1:S.append(fn(l[0]))
@@ -228,10 +241,15 @@ def eval(S, E, C, cp, R, EE):
             #print(k)
             S.append(['CL', C[cp], C[cp + 1], E])
             cp += 2
+        elif inst == 'LDICT':
+            S.append(['CONT', S[:], E[:], C[cp], R[:], EE[:]])
+            cp += 1
         elif inst == 'POP':
             del(S[ -1])
-
+        elif inst == '__CODE__':
+            S.append('Continuation!')
         else:
+            print(inst)
             raise KeyError('Unknown Code:' + inst)
 
 
