@@ -1,16 +1,16 @@
- # -*- coding: utf-8 -* 
+ # -*- coding: utf-8 -*
 import ply.lex as lex
 from fractions import Fraction
 # トークンリスト 常に必須
 reserved = {'set':'SET', 'if':'IF', 'lambda':'LAMBDA','def':'DEF', 'True':'TRUE', 'False':'FALSE', 'is':'IS', 'apply':'APPLY', 'call_cc':'CALLCC', 'var':'VAR'}
-tokens = ['STR', 'INT', 'FLOAT','E_FLOAT','FLOAT2', 'FRACT', 'PLUS','MINUS','TIMES','POW', 'DIVIDE',
-        'LPAREN','RPAREN','LBRAC', 'RBRAC','LBRAK', 'RBRAK',  'CAMMA','COL','SEMICOL','DOTS', 'LET', 
+tokens = ['COMMENT', 'STR', 'INT', 'FLOAT','E_FLOAT','FLOAT2', 'FRACT', 'PLUS','MINUS','TIMES','POW', 'DIVIDE',
+        'LPAREN','RPAREN','LBRAC', 'RBRAC','LBRAK', 'RBRAK',  'CAMMA','COL','SEMICOL','DOTS', 'LET',
         'EQUAL','NEQ', 'GEQ', 'LEQ', 'GT', 'LT', 'NOT', 'ID'] + list(reserved.values())
- # 正規表現による簡単なトークンのルール 
+ # 正規表現による簡単なトークンのルール
 t_PLUS   = r'\+'
 t_MINUS  = r'-'
 t_TIMES  = r'\*'
-t_POW    = r'\*\*' 
+t_POW    = r'\*\*'
 t_DIVIDE = r'/'
 t_LPAREN = r'\('
 t_RPAREN = r'\)'
@@ -20,12 +20,12 @@ t_LBRAK  = r'\['
 t_RBRAK  = r'\]'
 t_CAMMA  = r','
 t_COL    = r':'
-t_SEMICOL= r';' 
+t_SEMICOL= r';'
 t_DOTS   = r'\.\.'
 t_LET    = r'='
 t_EQUAL  = r'=='
 t_NEQ    = r'!='
-t_GEQ    = r'>=' 
+t_GEQ    = r'>='
 t_LEQ    = r'<='
 t_GT     = r'>'
 t_LT     = r'<'
@@ -40,8 +40,7 @@ t_IS     = r'is'
 t_APPLY  = r'apply'
 t_CALLCC = r'call_cc'
 t_VAR    = r'var'
-
-# 正規表現とアクションコード 
+# 正規表現とアクションコード
 def t_E_FLOAT(t):
     r'\d+[eE][+-]?\d+'
     t.value = float(t.value)
@@ -67,9 +66,16 @@ def t_ID(t):
     t.type = reserved.get(t.value, 'ID')
     return t
 def t_STR(t):
-    r'\"([^"\n]|\\["\n])*\"'
+    #r'\"([^"\n]|\\["\n])*\"'
+
+    r'"(?:[\\].|[^\\"])*"'
+
     t.value = (t.value)[1: - 1]
     return t
+def t_COMMENT(t):
+    #r'/*""/"*([^*/]|[^*]"/"|"*"[^/])*"*"*"*/'
+    r'\#. * '
+    pass
 # 行番号をたどれるように 
 def t_newline(t):
      r'\n+'

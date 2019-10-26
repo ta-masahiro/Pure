@@ -13,7 +13,9 @@ def eval(S, E, C, cp, R, EE):
             return S.pop()
         cp += 1
         if inst == 'LDC':
-            S.append(C[cp])
+            #
+            if C[cp] == []:S.append([])
+            else:S.append(C[cp])
             cp += 1
         elif inst == 'LD':
             v = C[cp]
@@ -83,10 +85,13 @@ def eval(S, E, C, cp, R, EE):
             n = C[cp]
             cp += 1
             fn = S.pop()
-            if n == 0:l = []
-            else:
-                l = copy.deepcopy(S[ - n:])
+            l = []
+            if n != 0:
+                #l = copy.deepcopy(S[ - n:]) #deep copyはやりすぎ！要素1個1個のcopyが望ましい
+                l = (S[ - n:]) 
                 del(S[ - n:])
+                #for i in range(n):
+                #    l = [S.pop()] + l
             if type(fn) == list and fn[0] == 'CL':
                 k = fn[2]
                 #print(k, l)
@@ -113,10 +118,13 @@ def eval(S, E, C, cp, R, EE):
             n = C[cp]
             cp += 1
             fn = S.pop()
-            if n == 0:l = []
-            else:
-                l = copy.deepcopy(S[ - n:])
+            l = []
+            if n != 0:
+                #l = copy.deepcopy(S[ - n:])
+                l = S[ - n:]
                 del(S[ - n:])
+                #for i in range(n):
+                #    l = [S.pop()] + l
             if type(fn) == list and fn[0] == 'CL':
                 k = fn[2]
                 #print(k, l)
@@ -246,8 +254,8 @@ def eval(S, E, C, cp, R, EE):
             cp += 1
         elif inst == 'POP':
             del(S[ -1])
-        elif inst == '__CODE__':
-            S.append('Continuation!')
+        #elif inst == '__CODE__':
+        #    S.append('Continuation!')
         else:
             print(inst)
             raise KeyError('Unknown Code:' + inst)

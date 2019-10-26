@@ -14,11 +14,16 @@ def List_set(L, i, v):
 def Dict(keys, vals):
     return dict(zip(map(lambda x: tuple(x) if isinstance(x, list) else x, keys), vals))
 def Dict_set(D, k, v):
+    #print(D, k, v)
     if isinstance(k, list):k = tuple(k)
     D[k] = v
     return v
-def Dict_ref(D, k):return D[str(k)]
-
+def Dict_ref(D, k):
+        return D[tuple(k)] if isinstance(k, list) else D[k]
+def isin(D, k):return k in D
+def Dict_isin(D, k):
+        if isinstance(k, list):k = tuple(k)
+        return k in D
 def search(ls, v):
     for i in range(len(ls)):
         if isinstance(ls[i], list):
@@ -42,7 +47,24 @@ def tail(e):
         return
     return
 
-G = {'_':None, 'range':range, 'list':list, 'Fraction':Fraction, 'print':print, 'len':len, 'list':List, 'list_set':List_set, 'dict':Dict, 'dict_set':Dict_set, 'dict_ref':Dict_ref}
+def load(file_name):
+    f = open(file_name)
+    s = f.read()
+    print(s)
+    result = parser.parse(s)
+    #c_time = time.time()
+    v = eval([], [G], result + ['STOP'], 0, [], [])
+    #e_time = time.time()
+    if type(v) == list and v != [] and  v[0] == 'CL':print('Usser Function')
+    else:print(v)
+    #print('c_time  : ', int((1000000 * (c_time - s_time))) / 1000000)
+    #print('e_time  : ', int((1000000 * (e_time - c_time))) / 1000000)
+    G['_'] = v
+
+def Push(L, v):
+    L.append(v)
+    return v
+G = {'_':None, 'push':Push, 'isin':isin, 'dict_isin':Dict_isin, 'load':load, 'range':range, 'list':list, 'Fraction':Fraction, 'print':print, 'len':len, 'list':List, 'list_set':List_set, 'dict':Dict, 'dict_set':Dict_set, 'dict_ref':Dict_ref}
 #G.update(vars(operator))
 #G.update(vars(math))
 #G.update(vars(cmath))
@@ -346,6 +368,7 @@ parser = yacc.yacc()
 from eval_test import eval
 import time
 if __name__ == '__main__':
+    load("lib.py")
     while True:
         try:
             s = input('calc > ')
