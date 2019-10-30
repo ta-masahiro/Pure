@@ -7,6 +7,7 @@ def eval(S, E, C, cp, R, EE):
         #print('C:', C[cp:])i
         #print(E[0])
         #if not ('z' in E[0]):
+        #print(inst)
         if inst == 'STOP':
             #print(S, R)
             #return S[ - 1]
@@ -242,6 +243,19 @@ def eval(S, E, C, cp, R, EE):
             cp = 0
             if p: C = t_exp
             else: C = f_exp
+        elif inst == 'WHILE':
+            p = S.pop()
+            back = C[cp]
+            loop_exp = C[cp + 1]
+            if p:
+                R.append([C, cp - back - 1])
+                #print(C[cp - back - 1])
+                C = loop_exp
+                cp = 0
+            else:
+                cp = cp + 2 
+                S.append(None)
+                #print(C[cp])
         elif inst == 'JOIN':
             C, cp =R.pop() 
         elif inst == 'LDF':
@@ -252,6 +266,12 @@ def eval(S, E, C, cp, R, EE):
         elif inst == 'LDICT':
             S.append(['CONT', S[:], E[:], C[cp], R[:], EE[:]])
             cp += 1
+        elif inst == 'LDM':                                     #############################
+            S.append(['MACRO', C[cp]])
+            cp += 1
+        elif inst == 'LDM_CL':                                  #############################
+            S.append(['MACRO_CL', C[cp], C[cp + 1], E])
+            cp += 2
         elif inst == 'POP':
             del(S[ -1])
         #elif inst == '__CODE__':

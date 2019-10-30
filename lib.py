@@ -67,7 +67,8 @@
                 )
         }
     ;
-    count = 0; 
+    # たらい回し関数のサンプル
+    count = 0;                          # 何回呼出したかのカウンタ
     t = lambda(x, y, z) { 
         count = count + 1; 
         if x <= y:
@@ -79,6 +80,7 @@
             )
     }
     ; 
+    # メモ化関数
     memois = lambda(f) {
         d = dict([1],[1]);
         lambda(args ..) 

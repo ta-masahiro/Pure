@@ -2,7 +2,8 @@
 import ply.lex as lex
 from fractions import Fraction
 # トークンリスト 常に必須
-reserved = {'set':'SET', 'if':'IF', 'lambda':'LAMBDA','def':'DEF', 'True':'TRUE', 'False':'FALSE', 'is':'IS', 'apply':'APPLY', 'call_cc':'CALLCC', 'var':'VAR'}
+reserved = {'set':'SET', 'if':'IF', 'lambda':'LAMBDA','def':'DEF', 'True':'TRUE', 
+        'False':'FALSE', 'is':'IS', 'apply':'APPLY', 'call_cc':'CALLCC', 'var':'VAR', 'while':'WHILE', 'macro':'MACRO'}
 tokens = ['COMMENT', 'STR', 'INT', 'FLOAT','E_FLOAT','FLOAT2', 'FRACT', 'PLUS','MINUS','TIMES','POW', 'DIVIDE',
         'LPAREN','RPAREN','LBRAC', 'RBRAC','LBRAK', 'RBRAK',  'CAMMA','COL','SEMICOL','DOTS', 'LET',
         'EQUAL','NEQ', 'GEQ', 'LEQ', 'GT', 'LT', 'NOT', 'ID'] + list(reserved.values())
@@ -40,6 +41,8 @@ t_IS     = r'is'
 t_APPLY  = r'apply'
 t_CALLCC = r'call_cc'
 t_VAR    = r'var'
+t_WHILE  = r'while'
+t_MACRO  = r'macro'
 # 正規表現とアクションコード
 def t_E_FLOAT(t):
     r'\d+[eE][+-]?\d+'
@@ -66,10 +69,7 @@ def t_ID(t):
     t.type = reserved.get(t.value, 'ID')
     return t
 def t_STR(t):
-    #r'\"([^"\n]|\\["\n])*\"'
-
     r'"(?:[\\].|[^\\"])*"'
-
     t.value = (t.value)[1: - 1]
     return t
 def t_COMMENT(t):
