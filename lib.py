@@ -44,11 +44,14 @@
             e=l[0]
         :
             if n==2:{
+                s=l[0];
                 e=l[1]
             }:
-                if n==3:
+                if n==3:{
+                    s=l[0];
+                    e=l[1];
                     stp=l[3]
-                :
+                }:
                     [];
 
         loop=lambda(i,r) if i>=e:r:loop(i+stp,r + [i]); 
