@@ -220,6 +220,20 @@ def eval(S, E, C, cp, R, EE):
                     ff = True
                     break
             if not ff:(E[0])[k] = v
+            #raise KeyError('Unknown Key: ',k)
+        elif inst == 'VSET':
+            ind = S.pop()
+            v = S[ - 1]
+            k = C[cp]
+            cp += 1
+            ff = False
+            #print(E)
+            for e in E:
+                if k in e:
+                    e[k][ind] = v
+                    ff = True
+                    break
+            if not ff:(E[0])[k][ind] = v
         elif inst == 'DCL':
             k = C[cp]
             cp += 1
