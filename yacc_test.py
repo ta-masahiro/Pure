@@ -28,38 +28,40 @@ def isin(D, k):return k in D
 def Dict_isin(D, k):
         if isinstance(k, list):k = tuple(k)
         return k in D
-# search旧版
-#def search(ls, v):
-#    for i in range(len(ls)):
-#        if isinstance(ls[i], list):
-#            j = search(ls[i], v)
-#            if not (j is None): return [i] + j
-#        elif ls[i] == v:return [i]
-#    return None
-def search_r(ls, v, p):          #リストlsにvが含まれる場所をすべてpに入れて返す
+def search_r(ls, v, p, exc = None):         #リストlsにvが含まれる場所をすべてpに入れて返す
+                                            # ただしexcの次にサブリストがあればそれは省く
+    FLG = False
     for i in range(len(ls)):
+        if FLG:
+            FLG = False
+            continue
+        if (ls[i] == exc) and (i < len(ls) - 1) and isinstance(ls[i + 1], list): #　追加  
+            FLG = True
+            #print("yahoo:", i)
+            continue
         if isinstance(ls[i], list):
             search_r(ls[i], v, p)
         elif ls[i] == v:
             p.append((ls, i))   #vが含まれるリストと位置をタプルにして返す
     pass
-def search_nr(ls, vs):           #リストlsに リストvsが含まれる場所をすべて返す
+def search_nr(ls, vs, exc = None):           #リストlsに リストvsが含まれる場所をすべて返す
     p = []
     if not isinstance(vs, list):
-        search_r(ls, vs, p)
+        search_r(ls, vs, p, exc)
         return p
     n = len(vs)
     newp = []
-    search_r(ls, vs[0], p)
+    search_r(ls, vs[0], p, exc)
     if p == []:return []
     for q in p:
         if vs == q[0][q[1]:q[1] + n]:newp.append(q)
     return newp
-def replace(ls, vs, ts):        #リストlsの全てのリストvsをtsで置き換える
-    p = search_nr(ls, vs)
+def replace(ls, vs, ts, exc = None):        #リストlsの全てのリストvsをtsで置き換える
+    p = search_nr(ls, vs, exc)
+    #print(p)
     n1 = len(vs)
     if p == []:return
-    for q in p:
+    for q in reversed(p):       #入れ替えると該当位置が変わってしまうので後ろから実行
         q[0][q[1]:q[1] + n1] = ts
 def tail(e):
     #print(e)
@@ -76,20 +78,20 @@ def tail(e):
         return
     return
 def macrofunction_expand(c, p):
-        #print('macro:', p[1][1])
-        #c = G[p[1][1]]
-        #print(c)
-        if isinstance(c, list) and c[0] == 'MACRO_CL':
             body = copy.deepcopy(c[1])                      # bodyはマクロ本体
             #print(body)
             prms = c[2]                                     # prmsはパラメータリスト
             print(body, prms)
             i = 0
             for pp in prms:
-                cc = search_nr(body, 'WHILE')               #whileの位置を覚えておく
-                replace(p[i], ['WHILE'], ['__WHILE__'])     #実引数のWHILEはリネームしておく
-                replace(body, ['LD', pp], p[i])             #仮引数を実引数で置き換える
-                dd = search_nr(body, 'WHILE')               #引数入れ替え後のWHILE位置を算出
+                #print(pp)
+                cc = search_nr(body, 'WHILE')               # whileの位置を覚えておく
+                replace(p[i], ['WHILE'], ['__WHILE__'])     # 実引数のWHILEはリネームしておく
+                                                            # 実質やりたいことはこの行のみ
+                replace(body, ['LD', pp], p[i], 'LDF')      # 仮引数を実引数で置き換える
+                                                            # 以後は置き換えでずれたWHILEの戻り先修正
+                                                            #
+                dd = search_nr(body, 'WHILE')               # 引数入れ替え後のWHILE位置を算出
                 if cc == []:
                     if dd != []:error() 
                 elif len(cc) != len(dd)  :error()
@@ -100,7 +102,7 @@ def macrofunction_expand(c, p):
                         cn, dn = ccc[1], ddd[1]
                         if cn != dn:
                             #ddd[0][dn + 1] =ddd[0][dn + 1] + (dn - cn) - 1
-                            for k in range(dn, 0,  - 1):
+                            for k in range(dn, 0,  - 1):    # 直前のPOPの次が戻り先
                                 if ddd[0][k] == 'POP':
                                     break
                             ddd[0][dn + 1] = dn - k - 1
@@ -132,7 +134,7 @@ def load(file_name):
 def Push(L, v):
     L.append(v)
     return v
-G = {'_':None, 'push':Push, 'isin':isin, 'dict_isin':Dict_isin, 'load':load, 'range':range, 'list':list, 'Fraction':Fraction, 'print':print, 'len':len, 'list':List, 'list_set':List_set, 'dict':Dict, 'dict_set':Dict_set, 'dict_ref':Dict_ref}
+G = {'_':None, 'push':Push, 'isin':isin, 'dict_isin':Dict_isin, 'load':load, 'range':range, 'list':list, 'Fraction':Fraction, 'print':print, 'len':len, 'list':List, 'list_set':List_set, 'dict':Dict, 'dict_set':Dict_set, 'dict_ref':Dict_ref, '_time':True, '_code':True}
 #G.update(vars(operator))
 G.update(vars(math))
 #G.update(vars(cmath))
@@ -172,19 +174,23 @@ def p_expression_2op(p):
                 return
             p[0] += ['LD', p[2], 'CALL', 2]
     else:p[0] += ['LD', p[2], 'CALL', 2]
-    #以下は定数の繰り込み
-    try:
-        v = eval([], [G], p[0] + ['STOP'],0,  [], [])
-    except:
-        #print("error")
-        return
-    p[0] = ['LDC', v]
+    ##以下は定数の繰り込み
+    #try:
+    #    v = eval([], [G], p[0] + ['STOP'],0,  [], [])
+    #except:
+    #    #print("error")
+    #    return
+    #p[0] = ['LDC', v]
 # 代入式
 def p_expression_set(p):
     '''
     expression_set  : ID LET expression
     '''
-    p[0] = p[3] + ['SET', p[1]]
+    # expression_set    | ID LPAREN expression RPAREN expression
+    if len(p) == 4:
+        p[0] = p[3] + ['SET', p[1]]
+    #elif len(p) == 7:
+    #    p[0] = p[6] + p[3] + ['VSET', p[1]]
     #以下は定数の繰り込み
     #try:
     #    v = eval([], [G], p[3] + ['STOP'],0,  [], [])
@@ -206,20 +212,6 @@ def p_expression_lambda(p):
                         | LAMBDA LPAREN args RPAREN expression
                         | LAMBDA LPAREN RPAREN expression
     '''
-    #def tail(e):
-    #    #print(e)
-    #    if len(e)>=3 and e[ - 3] == 'CALL':
-    #        e[ - 3] = 'TCALL'
-    #        return
-    #    elif len(e)>=4 and e[ - 4] == 'SEL':
-    #        e[ - 4] = 'TSEL'
-    #        e[ - 2][ - 1] = 'RTN'
-    #        e[ - 3][ - 1] = 'RTN'
-    #        if e[ - 1] == 'RTN':e[ - 1] = 'STOP'
-    #        tail(e[ - 2])
-    #        tail(e[ - 3])
-    #        return
-    #    return
 
     if      len(p) == 7:
         e = p[6] + ['RTN']
@@ -256,6 +248,18 @@ def p_expression_macro(p):
     elif len(p) == 5:p[0] = ['LDM_CL', p[4], []]
     elif len(p) == 3:p[0] = ['LDM', p[2]]
 
+#def p_expression_block(p):
+#    '''
+#    expression_block    : lblock_exp RBLOCK
+#    '''
+#    p[0] = ['LDF',p[1] + ['RTN'], [], 'CALL', 0]
+#def p_expression_lbl_exp(p):
+#    '''
+#    lblock_exp  : LBLOCK expression
+#                | lblock_exp SEMICOL expression
+#    '''
+#    if      len(p) == 4: p[0] = p[1] + ['POP'] + p[3]
+#    elif    len(p) == 3: p[0] = p[2]  
 def p_expression_func_decl(p):
     '''
     expression_function_decl : DEF ID LPAREN args RPAREN LET expression
@@ -265,8 +269,10 @@ def p_expression_func_decl(p):
 def p_decl_exp(p):
     '''
     expression_decl : VAR ID
+                    | VAR ID LET expression
     '''
-    p[0] = ['DCL', p[2]]
+    if len(p) == 3: p[0] = ['DCL', p[2]]
+    if len(p) == 5: p[0] = ['DCL', p[2], 'POP'] + p[4] + ['SET', p[2]]
 
 def p_while_exp(p):
     '''
@@ -278,7 +284,16 @@ def p_mult_expression(p):
     '''
     mult_expression : left_mult_exp RBRAC
     '''
-    p[0] = p[1]
+    code = p[1]
+    # 複式中に変数宣言命令が入っていたら、その複式部分を無条件にlambda式に置き換える
+    # 置き換えたた場合はその原因となった変数宣言命令をDCLから__DCL__に変更に2重のlambda化を防ぐ
+    # 置き換えた__DCL__は最後にDCLに戻す
+    cc = search_nr(code, 'DCL')
+    if not (cc == []):
+        replace(code, ['DCL'], ['__DCL__'])
+        p[0] = ['LDF', code + ['RTN'], [], 'CALL', 0, ]
+    else:
+        p[0] = code
 # 複式を使う部品 left_mult_exp = {式; 式; ...
 def p_lieft_mult_exp(p):
     '''
@@ -331,14 +346,14 @@ def p_term_2op(p):
     elif    p[2] == '>' : p[0] += ['GT']
     elif    p[2] == '<' : p[0] += ['LT']
     elif    p[2] == 'is': p[0] += ['IS'] 
-    ##以下は定数の繰り込み
-    try:
-        #print(p[0])
-        v = eval([], [G], p[0] + ['STOP'],0,  [], [])
-    except:
-        #print("error")
-        return
-    p[0] = ['LDC', v]
+    ###以下は定数の繰り込み
+    #try:
+    #    #print(p[0])
+    #    v = eval([], [G], p[0] + ['STOP'],0,  [], [])
+    #except:
+    #    #print("error")
+    #    return
+    #p[0] = ['LDC', v]
 # 単項演算子
 def p_term_1op(p):
     '''
@@ -455,52 +470,6 @@ def p_factor_f_call(p):
         c = G[p[1][1]]
         #print(c)
         if isinstance(c, list) and c[0] == 'MACRO_CL':
-        #    body = copy.deepcopy(c[1])                  # bodyはマクロ本体
-        #    #print(body)
-        #    prms = c[2]                                 # prmsはパラメータリスト
-        #    print(body, prms)
-        #    i = 0
-        #    for pp in prms:
-        #        #while True:
-        #        #    pos = search(body, pp)
-        #        #    print(pos)
-        #        #    if pos is None:
-        #        #        break
-        #        #    else:pos = pos[0]
-        #        #    if body[pos - 1] == 'LD':
-        #        #        pos = pos - 1
-        #        #        del(body[pos:pos + 2])
-        #        #        body = body[:pos] + p[3][i] + body[pos:]
-        #        #    else:break
-        #        cc = search_nr(body, 'WHILE')               #whileの位置を覚えておく
-        #        replace(p[3][i], ['WHILE'], ['__WHILE__'])  #実引数のWHILEはリネームしておく
-        #        replace(body, ['LD', pp], p[3][i])          #仮引数を実引数で置き換える
-        #        dd = search_nr(body, 'WHILE')               #引数入れ替え後のWHILE位置を算出
-        #        if cc == []:
-        #            if dd != []:error() 
-        #        elif len(cc) != len(dd)  :error()
-        #        else:
-        #            j = 0
-        #            for ccc in cc:
-        #                ddd = dd[j]
-        #                cn, dn = ccc[1], ddd[1]
-        #                if cn != dn:
-        #                    #ddd[0][dn + 1] =ddd[0][dn + 1] + (dn - cn) - 1
-        #                    for k in range(dn, 0,  - 1):
-        #                        if ddd[0][k] == 'POP':
-        #                            break
-        #                    ddd[0][dn + 1] = dn - k - 1
-        #                j += 1
-        #        #
-        #        replace(body, ['__WHILE__'], ['WHILE'])     #リネームしたWHILEを戻す
-        #        #
-        #        i += 1
-        #    #
-        #    p[0] = body
-        #    print(p[0])
-        #    #v = eval([], [G], c[1] + ['STOP'], 0, [], [])
-        #    #p[0] = ['LDC', v]
-        #    return
             p[0] = macrofunction_expand(c, p[3])
             return
     # マクロでない場合
@@ -571,7 +540,7 @@ if __name__ == '__main__':
     load("lib.py")
     while True:
         try:
-            s = input('calc > ')
+            s = input('pure> ')
         except EOFError:
             break
         if not s:
@@ -588,35 +557,28 @@ if __name__ == '__main__':
         #
         q = result + ['STOP']
         qq = q
-        #t = search(q, '__CODE__')
-        #while not (t is None):
-        #    #print(t)
-        #    for i in range(len(t) - 1):
-        #        q = q[t[i]]
-        #    #print(q[t[ - 1]:])
-        #    q[t[ - 1]] = q[t[ - 1] + 6:]
-        #    t = search(qq, '__CODE__')
         cc = search_nr(qq, '__CODE__')
         if cc != []: 
             for (ccc, j) in cc:
                 ccc[j] = ccc[j + 6:]
-
-        print(qq)
+        # __DCL__を元に戻す
+        replace(qq, ['__DCL__'], ['DCL'])
+        if G['_code']:print(qq)
         c_time = time.time()
         #print( result)
-        #try:
-        #v = eval([], [G], result + ['STOP'], 0, [], [])
-        v = eval([], [G], qq, 0, [], [])
-        e_time = time.time()
-        if type(v) == list and v != [] and v[0] == 'CL':print('Usser Function')
-        elif type(v) == list and v != [] and v[0] == 'MACRO_CL':print ('User Macro')
-        else:print(v)
-        print('c_time  : ', int((1000000 * (c_time - s_time))) / 1000000)
-        print('e_time  : ', int((1000000 * (e_time - c_time))) / 1000000)
-        G['_'] = v
-        #except (KeyError, IndexError) as e:
-        #    print(e)
-        #    continue
+        try:
+            #v = eval([], [G], result + ['STOP'], 0, [], [])
+            v = eval([], [G], qq, 0, [], [])
+            e_time = time.time()
+            if type(v) == list and v != [] and v[0] == 'CL':print('Usser Function')
+            elif type(v) == list and v != [] and v[0] == 'MACRO_CL':print ('User Macro')
+            elif type(v) == list and v != [] and v[0] == 'CONT':print ('User Continueation')
+            else:print(v)
+            if G['_time']:print('c_time  : ', int((1000000 * (c_time - s_time))) / 1000000, '\te_time  : ', int((1000000 * (e_time - c_time))) / 1000000)
+            G['_'] = v
+        except (KeyError, IndexError, SyntaxError) as e:
+            print(e)
+            continue
         #except :
         #    print("Some Error Occured!")
-        #    continue
+        #   continue
