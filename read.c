@@ -229,7 +229,7 @@ Vector * chg_byte_code(Vector * code, Hash * G) {
     } 
     return t; 
 }
-
+ /* 
 void disassy(Vector * code, int indent) {
     void * c; 
     Vector * v; 
@@ -326,6 +326,7 @@ void disassy(Vector * code, int indent) {
     } 
     return t; 
 }
+ */ 
 int main(int argc, char * argv[]) {
     char c; 
     Vector  * code,  * t; 
