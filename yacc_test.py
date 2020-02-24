@@ -65,16 +65,16 @@ def replace(ls, vs, ts, exc = None):        #リストlsの全てのリストvs�
         q[0][q[1]:q[1] + n1] = ts
 def tail(e):
     #print(e)
-    if len(e)>=3 and e[ - 3] == 'CALL':
-        e[ - 3] = 'TCALL'
+    if len(e)>=3 and e[ - 3] == 'CALL':     # 末尾が CALL n RET である場合は 
+        e[ - 3] = 'TCALL'                   # 末尾呼び出し
         return
-    elif len(e)>=4 and e[ - 4] == 'SEL':
-        e[ - 4] = 'TSEL'
-        e[ - 2][ - 1] = 'RTN'
-        e[ - 3][ - 1] = 'RTN'
+    elif len(e)>=4 and e[ - 4] == 'SEL':    # 末尾が SEL CODE1 CODE2 RETである場合は末尾呼び出し
+        e[ - 4] = 'TSEL'                    # SEL をTSELに変えて
+        e[ - 2][ - 1] = 'RTN'               # CODE内のJOINはRETに変える
+        e[ - 3][ - 1] = 'RTN'               # 最後のRETは不要；とりあえずSTOPを挿入
         if e[ - 1] == 'RTN':e[ - 1] = 'STOP'
-        tail(e[ - 2])
-        tail(e[ - 3])
+        tail(e[ - 2])                       # CODE1について末尾処理を
+        tail(e[ - 3])                       # CODE2も同じ
         return
     return
 def macrofunction_expand(c, p):
@@ -117,6 +117,28 @@ def macrofunction_expand(c, p):
             #v = eval([], [G], c[1] + ['STOP'], 0, [], [])
             #p[0] = ['LDC', v]
             return body
+def Compile(s):
+    try:
+        result = parser.parse(s)
+    except (SyntaxError, ZeroDivisionError) as e:
+        #print(e)
+        return
+    #
+    # call_ccの処理
+    #
+    q = result + ['STOP']
+    qq = q
+    cc = search_nr(qq, '__CODE__')
+    if cc != []: 
+        for (ccc, j) in cc:
+            ccc[j] = ccc[j + 6:]
+    # __DCL__を元に戻す
+    replace(qq, ['__DCL__'], ['DCL'])
+    return qq
+
+def Eval(s):
+    return eval([], [G], Compile(s), 0, [], [])
+
 def load(file_name):
     f = open(file_name)
     s = f.read()
@@ -125,17 +147,28 @@ def load(file_name):
     #c_time = time.time()
     v = eval([], [G], result + ['STOP'], 0, [], [])
     #e_time = time.time()
-    if type(v) == list and v != [] and  v[0] == 'CL':print('Usser Function')
+    if   type(v) == list and v != [] and v[0] == 'CL':print('Usser Function')
+    elif type(v) == list and v != [] and v[0] == 'MACRO_CL':print ('User Macro')
+    elif type(v) == list and v != [] and v[0] == 'CONT':print ('User Continueation')
     else:print(v)
     #print('c_time  : ', int((1000000 * (c_time - s_time))) / 1000000)
     #print('e_time  : ', int((1000000 * (e_time - c_time))) / 1000000)
     G['_'] = v
-
+def Pop(L):return L.pop()
 def Push(L, v):
     L.append(v)
-    return v
-G = {'_':None, 'push':Push, 'isin':isin, 'dict_isin':Dict_isin, 'load':load, 'range':range, 'list':list, 'Fraction':Fraction, 'print':print, 'len':len, 'list':List, 'list_set':List_set, 'dict':Dict, 'dict_set':Dict_set, 'dict_ref':Dict_ref, '_time':True, '_code':True}
-#G.update(vars(operator))
+    return L 
+def Close(f):
+    f.close()
+def Readline(f):
+    return f.readline()
+def Print_n(*args):
+    print(*args,end="")
+G = {'_':None, 'push':Push, 'pop':Pop, 'isin':isin, 'dict_isin':Dict_isin, 'load':load, 'range':range, 'eval':Eval, 'compile':Compile,
+        'list':list, 'Fraction':Fraction, 'printn':print, 'print':Print_n,'input':input,'int':int,'len':len, 'list':List, 
+        'list_set':List_set, 'dict':Dict, 'dict_set':Dict_set, 'dict_ref':Dict_ref, 'open':open, 'close':Close,
+        '_time':True, '_code':True, 'readline':Readline}
+G.update(vars(operator))
 G.update(vars(math))
 #G.update(vars(cmath))
 #G = {'print':print}
@@ -174,6 +207,16 @@ def p_expression_2op(p):
                 return
             p[0] += ['LD', p[2], 'CALL', 2]
     else:p[0] += ['LD', p[2], 'CALL', 2]
+
+    if len(p[1]) == 2 and len(p[3]) == 2 and p[1][0] ==  'LDC' and p[3][0] ==  'LDC':
+        v = eval([], [G], p[0] + ['STOP'],0,  [], [])
+        p[0] = ['LDC', v[ - 1]]
+        return
+    
+    if len(p[3]) == 2 and p[3][0] == 'LDC' and p[3][1] == 1:
+        if p[2] == '+':p[0] = p[1] + ['INC']
+        elif p[2] == '-':p[0] = p[1] + ['DEC']
+    
     ##以下は定数の繰り込み
     #try:
     #    v = eval([], [G], p[0] + ['STOP'],0,  [], [])
@@ -185,12 +228,18 @@ def p_expression_2op(p):
 def p_expression_set(p):
     '''
     expression_set  : ID LET expression
+                    | SET ID LET expression
+                    | SET ID LBRAK expression RBRAK LET expression
+
     '''
     # expression_set    | ID LPAREN expression RPAREN expression
     if len(p) == 4:
         p[0] = p[3] + ['SET', p[1]]
-    #elif len(p) == 7:
-    #    p[0] = p[6] + p[3] + ['VSET', p[1]]
+        #p[0]=p[3]+['LD',p[1],'SET']
+    if len(p) == 5:
+        p[0] = p[4] + ['SET', p[2]]
+    if len(p) == 8:
+        p[0] = p[7] + p[4] + ['VSET', p[2]]
     #以下は定数の繰り込み
     #try:
     #    v = eval([], [G], p[3] + ['STOP'],0,  [], [])
@@ -205,6 +254,13 @@ def p_expression_if(p):
     expression_if   : IF expression COL expression COL expression
     '''
     p[0] = p[2] + ['SEL', p[4] + ['JOIN'], p[6] + ['JOIN']]
+    # 定数の展開
+    #print(p[0])
+    if len(p[2]) == 2 and p[2][0] ==  'LDC' :
+        #v = eval([], [G], p[0] + ['STOP'],0,  [], [])
+        if p[2][1] :p[0] = p[4]
+        else:p[0] = p[6]
+
 # lambda式
 def p_expression_lambda(p):
     '''
@@ -263,8 +319,21 @@ def p_expression_macro(p):
 def p_expression_func_decl(p):
     '''
     expression_function_decl : DEF ID LPAREN args RPAREN LET expression
+                             | DEF ID LPAREN args DOTS RPAREN LET expression
+                             | DEF ID LPAREN RPAREN LET expression
     '''
-    p[0] = ['LDF'] +[p[7] + ['RTN']]+[p[4]] + ['SET', p[2]]
+    if len(p) == 7 :
+        e = p[6]  + ['RTN']
+        tail(e)
+        p[0] = ['LDF'] +[e]+[[]] + ['SET', p[2]]
+    if len(p) == 8 :
+        e = p[7]  +  ['RTN']
+        tail(e)
+        p[0] = ['LDF'] +[e]+[p[4]] + ['SET', p[2]]
+    if len(p) == 9 :
+        e = p[8]  + ['RTN']
+        tail(e)
+        p[0] = ['LDF'] +[e]+[p[4]+['..']] + ['SET', p[2]]
 
 def p_decl_exp(p):
     '''
@@ -298,10 +367,12 @@ def p_mult_expression(p):
 def p_lieft_mult_exp(p):
     '''
     left_mult_exp   : left_mult_exp SEMICOL expression
+                    | left_mult_exp CAMMA expression
                     | LBRAC expression
                     | LBRAC
     '''
-    if      len(p) == 4: p[0] = p[1] + ['POP'] + p[3]
+    if      len(p) == 4 and p[2] == ';': p[0] = p[1] + ['POP'] + p[3]
+    elif    len(p) == 4 and p[2] == ',': p[0]  = p[1] + p[3]
     elif    len(p) == 3: p[0] = p[2]  
     else:    p[0] = ['LDC', None]
 #
@@ -314,19 +385,15 @@ def p_term(p):
             | term_1op
     '''
     p[0] = p[1] 
-    ##以下は定数の繰り込み
-    #try:
-    #    v = eval([], [G], p[0] + ['STOP'],0,  [], [])
-    #except:
-    #    #print("error")
-    #    return
-    #p[0] = ['LDC', v]
+#
 # 2項演算子
+#
 def p_term_2op(p):
     '''
     term_2op    : term TIMES    factor
                 | term DIVIDE   factor
                 | term POW      factor
+                | term PERC     factor
                 | term EQUAL    factor
                 | term NEQ      factor
                 | term GEQ      factor
@@ -338,14 +405,19 @@ def p_term_2op(p):
     p[0] = p[1] + p[3]
     if      p[2] == '*' : p[0] += ['MUL']
     elif    p[2] == '/' : p[0] += ['DIV']
-    elif    p[2] == '**': p[0] += ['POW']   
+    elif    p[2] == '**': p[0] += ['POW']
+    elif    p[2] == '%' : p[0] += ['LD', 'mod', 'CALL', 2]    
     elif    p[2] == '==': p[0] += ['EQ' ]  
     elif    p[2] == '!=': p[0] += ['NEQ']
     elif    p[2] == '>=': p[0] += ['GEQ']   
     elif    p[2] == '<=': p[0] += ['LEQ'] 
     elif    p[2] == '>' : p[0] += ['GT']
     elif    p[2] == '<' : p[0] += ['LT']
-    elif    p[2] == 'is': p[0] += ['IS'] 
+    elif    p[2] == 'is': p[0] += ['IS']
+
+    if len(p[1]) == 2 and len(p[3]) == 2 and p[1][0] ==  'LDC' and p[3][0] ==  'LDC':
+        v = eval([], [G], p[0] + ['STOP'],0,  [], [])
+        p[0] = ['LDC', vi[ - 1]]
     ###以下は定数の繰り込み
     #try:
     #    #print(p[0])
@@ -362,6 +434,10 @@ def p_term_1op(p):
     '''
     if      p[1] == '-': p[0] = p[2] + ['MINUS']
     elif    p[1] == '!': p[0] = p[2] + ['NOT']
+    # 定数の畳み込み
+    if len(p[2]) == 2 and p[2][0] ==  'LDC' :
+        v = eval([], [G], p[0] + ['STOP'],0,  [], [])
+        p[0] = ['LDC', v[ - 1]]
 #
 # 要素 factor = 数値 | 変数 |ベクター | ベクター参照 | 関数呼出 | 括弧式
 #
@@ -371,8 +447,10 @@ def p_factor(p):
             | number
             | var
             | vector
+            | dict
             | string
             | vect_ref
+            | vect_slice
             | f_call
             | br_expr
             | mult_expression
@@ -396,8 +474,6 @@ def p_factor_num(p):
     '''
     number  : INT 
             | FLOAT
-            | E_FLOAT
-            | FLOAT2
             | FRACT
     '''
     p[0] = ['LDC', p[1]]
@@ -412,8 +488,12 @@ def p_factor_var(p):
         c = G[p[1]]
         if isinstance(c, list) and c != [] and c[0] == 'MACRO':
             #p[0] = c[1]    # 解釈しないでそのまま出力すのも仕様としてあり
-            v = eval([], [G], c[1] + ['STOP'], 0, [], [])
-            p[0] = ['LDC', v]
+            try:                        # 定数として解釈可能ならそれを返す
+                v = eval([], [G], c[1] + ['STOP'], 0, [], [])
+                p[0] = ['LDC', v[ - 1]]
+            except:                     # 定数として解釈できなければコードを残す
+                p[0] = c[1]
+            #p[0] = ['LDC', v]
         else:p[0] = ['LD', p[1]]    #
     else:p[0] = ['LD', p[1]]
 
@@ -437,6 +517,13 @@ def p_vector(p):
         for c in p[1]:
             C = C + c
         p[0] = C + ['VEC', args]
+        # 定数の畳み込み
+        v = []
+        for c in p[1]:
+            if c[0] != 'LDC':return
+            v.append(c[1])
+        p[0] = ['LDC', v]
+
 def p_lvector(p):
     '''
     lvector : lvector CAMMA expression
@@ -444,12 +531,41 @@ def p_lvector(p):
     '''
     if      len(p) == 4: p[0] = p[1] + [p[3]]
     elif    len(p) == 3: p[0] = [p[2]]
+
+def p_dict(p):
+    '''
+    dict    : ldict  RBRAC
+            | LBRAC RBRAC
+    '''
+    if p[1] == '{':
+        p[0] = ['LDC', {}]
+    else:
+        args = len(p[1])
+        C=[]
+        for i in reversed(range(args)):
+            C = C+p[1][i]
+        p[0] = C+['DICT',args]
+
+def p_ldict(p):
+    '''
+    ldict   : ldict CAMMA expression COL expression
+            | LBRAC expression COL expression
+    '''
+    if len(p ) == 5:
+        p[0] = [p[2]]+[p[4]]
+    else :p[0] = p[1]+[p[3]]+[p[5]]
+
 # ベクター参照
 def p_factor_ref(p):
     '''
-    vect_ref : factor LBRAK factor RBRAK
+    vect_ref : factor LBRAK expression RBRAK
     '''
     p[0] = p[1] + p[3] + ['REF']
+def p_factor_slice(p):
+    '''
+    vect_slice  : factor LBRAK factor COL factor RBRAK
+    '''
+    p[0] = p[1] + p[5] + p[3] + ['SLS']
 # 括弧式
 def p_factor_br_expr(p):
     '''
@@ -459,7 +575,8 @@ def p_factor_br_expr(p):
 # 関数呼出
 def p_factor_f_call(p):
     '''
-    f_call  : factor LPAREN params RPAREN
+    f_call  : factor LPAREN params DOTS RPAREN
+            | factor LPAREN params RPAREN
             | factor LPAREN RPAREN
     '''
         #p[0] = p[1] + ['CALL', 0]
@@ -474,6 +591,14 @@ def p_factor_f_call(p):
             return
     # マクロでない場合
     args = 0
+    if len(p) == 6:         #パラメータをドット展開する場合はapplyに変換する
+        args = len(p[3]) + 1
+        C = p[1]
+        for c in p[3]:
+            C = C + c
+        p[0] = C + ['APL', args]
+        return
+    # 通常パラメータの場合
     if len(p) == 5: 
         args = len(p[3])
         code = []
@@ -511,6 +636,11 @@ def p_factor_if(p):
     function_if : IF LPAREN expression CAMMA expression CAMMA expression RPAREN
     '''
     p[0] = p[3] + ['SEL', p[5] + ['JOIN'], p[7] + ['JOIN']]
+    # 定数の展開
+    if len(p[3]) == 2 and p[3][0] ==  'LDC' :
+        #v = eval([], [G], p[0] + ['STOP'],0,  [], [])
+        if p[3][1] :p[0] = p[5]
+        else:p[0] = p[7]
 
 def p_factor_lambda(p):
     '''
@@ -549,7 +679,7 @@ if __name__ == '__main__':
         try:
             result = parser.parse(s)
             #print(result)
-        except SyntaxError as e:
+        except (SyntaxError, ZeroDivisionError) as e:
             print(e)
             continue
         #
@@ -568,15 +698,17 @@ if __name__ == '__main__':
         #print( result)
         try:
             #v = eval([], [G], result + ['STOP'], 0, [], [])
-            v = eval([], [G], qq, 0, [], [])
+            V = eval([], [G], qq, 0, [], [])
             e_time = time.time()
-            if type(v) == list and v != [] and v[0] == 'CL':print('Usser Function')
-            elif type(v) == list and v != [] and v[0] == 'MACRO_CL':print ('User Macro')
-            elif type(v) == list and v != [] and v[0] == 'CONT':print ('User Continueation')
-            else:print(v)
+            for v in V:
+                if type(v) == list and v != [] and v[0] == 'CL':print('User Function')
+                elif type(v) == list and v != [] and v[0] == 'MACRO_CL':print ('User Macro')
+                elif type(v) == list and v != [] and v[0] == 'CONT':print ('User Continueation')
+                elif type(v) == str:print(repr(v))
+                else:print(v)
             if G['_time']:print('c_time  : ', int((1000000 * (c_time - s_time))) / 1000000, '\te_time  : ', int((1000000 * (e_time - c_time))) / 1000000)
             G['_'] = v
-        except (KeyError, IndexError, SyntaxError) as e:
+        except (KeyError, IndexError, SyntaxError, TypeError, ZeroDivisionError,ValueError,FileNotFoundError) as e:
             print(e)
             continue
         #except :

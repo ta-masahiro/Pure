@@ -11,7 +11,8 @@ def eval(S, E, C, cp, R, EE):
         if inst == 'STOP':
             #print(S, R)
             #return S[ - 1]
-            return S.pop()
+            #return S.pop()
+            return S
         cp += 1
         if inst == 'LDC':
             #
@@ -32,6 +33,10 @@ def eval(S, E, C, cp, R, EE):
             if not ff:
                 #print(C[cp:])
                 raise KeyError("UnknownKey:" + v)
+        elif inst == 'INC':
+            S[ - 1] += 1
+        elif inst == 'DEC':
+            S[ - 1]  -= 1
         elif inst == 'MINUS':
             S[ - 1] =  - S[ - 1]
         elif inst == 'NOT':
@@ -82,6 +87,11 @@ def eval(S, E, C, cp, R, EE):
             ref = S.pop()
             t = S.pop()
             S.append(t[ref])
+        elif inst == 'SLS':
+            sl_s = S.pop()
+            sl_e = S.pop()
+            t = S.pop()
+            S.append(t[sl_s:sl_e])
         elif inst == 'TCALL': 
             n = C[cp]
             cp += 1
@@ -208,9 +218,13 @@ def eval(S, E, C, cp, R, EE):
         elif inst == 'RTN':
             E = EE.pop()
             C, cp = R.pop()
-        elif inst == 'SET':
+        elif inst == 'SET': # ... value key SET ...  -> key = value に変更 
             v = S[ - 1]
+            #k = S.pop()
             k = C[cp]
+            #v = S[ - 1]
+            #print( "val = ", v)
+            #print("key = ", k)
             cp += 1
             ff = False
             #print(E)
@@ -286,6 +300,16 @@ def eval(S, E, C, cp, R, EE):
         elif inst == 'LDM_CL':                                  #############################
             S.append(['MACRO_CL', C[cp], C[cp + 1], E])
             cp += 2
+        elif inst == 'DICT':
+            n = C[cp]//2
+            cp += 1
+            d={}
+            for i in range(n):
+                k=S.pop()
+                if isinstance(k,list):k=tuple(k)
+                v=S.pop()
+                d[k] = v
+            S.append(d)
         elif inst == 'POP':
             del(S[ -1])
         #elif inst == '__CODE__':

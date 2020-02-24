@@ -4,15 +4,16 @@ from fractions import Fraction
 # トークンリスト 常に必須
 reserved = {'set':'SET', 'if':'IF', 'lambda':'LAMBDA','def':'DEF', 'True':'TRUE', 
         'False':'FALSE', 'is':'IS', 'apply':'APPLY', 'call_cc':'CALLCC', 'var':'VAR', 'while':'WHILE', 'macro':'MACRO'}
-tokens = ['COMMENT', 'STR', 'INT', 'FLOAT','E_FLOAT','FLOAT2', 'FRACT', 'PLUS','MINUS','TIMES','POW', 'DIVIDE',
+tokens = ['COMMENT', 'STR', 'INT', 'FLOAT','FRACT', 'PLUS','MINUS','TIMES','POW', 'DIVIDE',
         'LPAREN','RPAREN','LBRAC', 'RBRAC','LBRAK', 'RBRAK',  'CAMMA','COL','SEMICOL','DOTS', 'LET',
-        'EQUAL','NEQ', 'GEQ', 'LEQ', 'GT', 'LT', 'NOT', 'ID'] + list(reserved.values())
+        'EQUAL','NEQ', 'GEQ', 'LEQ', 'GT', 'LT', 'NOT', 'ID', 'PERC'] + list(reserved.values())
  # 正規表現による簡単なトークンのルール
 t_PLUS   = r'\+'
 t_MINUS  = r'-'
 t_TIMES  = r'\*'
 t_POW    = r'\*\*'
 t_DIVIDE = r'/'
+t_PERC   = r'%'
 t_LPAREN = r'\('
 t_RPAREN = r'\)'
 t_LBRAC  = r'{'
@@ -44,16 +45,20 @@ t_VAR    = r'var'
 t_WHILE  = r'while'
 t_MACRO  = r'macro'
 # 正規表現とアクションコード
-def t_E_FLOAT(t):
-    r'\d+[eE][+-]?\d+'
-    t.value = float(t.value)
-    return t
+#def t_E_FLOAT(t):
+#    r'\d+[eE][+-]?\d+'
+#    t.value = float(t.value)
+#    return t
+#def t_FLOAT(t):
+#     r'\d+\.\d*([eE][+-]?\d+)? '
+#     t.value = float(t.value)
+#     return t
+#def t_FLOAT2(t):
+#     r'\d*\.\d+([eE][+-]?\d+)? '
+#     t.value = float(t.value)
+#     return t
 def t_FLOAT(t):
-     r'\d+\.\d*([eE][+-]?\d+)? '
-     t.value = float(t.value)
-     return t
-def t_FLOAT2(t):
-     r'\d*\.\d+([eE][+-]?\d+)? '
+     r'\d+[eE][+-]?\d+|(\d*\.\d+|\d+\.\d*)([eE][+-]?\d+)?'
      t.value = float(t.value)
      return t
 def t_FRACT(t):
@@ -69,8 +74,9 @@ def t_ID(t):
     t.type = reserved.get(t.value, 'ID')
     return t
 def t_STR(t):
-    r'"(?:[\\].|[^\\"])*"'
-    t.value = (t.value)[1: - 1]
+    #r'"(?:[\\].|[^\\"])*"'
+    r'"((\\"|[^"]) * )"'
+    t.value = (t.value)[1: - 1].encode().decode('unicode_escape')
     return t
 def t_COMMENT(t):
     #r'/*""/"*([^*/]|[^*]"/"|"*"[^/])*"*"*"*/'
