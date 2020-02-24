@@ -16,7 +16,7 @@
 #include "hash.c"
 */
 #include "vm.h"
-enum CODE {NOP, STOP, LDC,   LD,   ADD,  CALL, RTN, SEL, JOIN, LDF, SET, LEQ,  LDG,  GSET, SUB, \
+enum CODE {STOP, LDC,   LD,   ADD,  CALL, RTN, SEL, JOIN, LDF, SET, LEQ,  LDG,  GSET, SUB, \
            DEC,  TCALL, TSEL, DROP, EQ,   INC, MUL, DIV,  VEC, LDV, VSET, HASH, LDH,  HSET, \
            VPUSH, VPOP};
  //        0     1      2     3     4     5    6    7     8    9    10    11    12    13   \

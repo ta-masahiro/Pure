@@ -127,7 +127,7 @@ Vector *  get_code(Stream * s) {
     return code; 
 }
 
-enum CODE {NOP, STOP, LDC, LD, ADD, CALL, RTN, SEL, JOIN, LDF, SET, LEQ, LDG, GSET, SUB, \
+enum CODE {STOP, LDC, LD, ADD, CALL, RTN, SEL, JOIN, LDF, SET, LEQ, LDG, GSET, SUB, \
            DEC, TCALL, TSEL, POP, EQ, INC, MUL, DIV, VEC, LDV, VSET, HASH, LDH, HSET, \
            VPUSH, VPOP};
  //        0     1    2   3    4     5    6    7     8    9    10   11   12    13   \
@@ -183,13 +183,13 @@ Vector * chg_byte_code(Vector * code, Hash * G) {
         } else if (strcmp((char * )c, "LDG") == 0) {
             operand = dequeue(code); 
             v = Hash_get(G, (char * )operand); 
-             if (v == NULL) {
+            if (v == NULL) {
                  push(t, (void * )LDG); 
                  push(t, operand);
-             } else {
-                 push(t, (void *) LDC); 
-                 push(t, (void * )( * v)); 
-             } 
+            } else {
+                push(t, (void *) LDC); 
+                push(t, (void * )( * v)); 
+            } 
         } else if (strcmp((char * )c, "GSET") == 0) {
             push(t, (void * )GSET); 
             push(t, dequeue(code)); 
