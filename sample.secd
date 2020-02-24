@@ -1,0 +1,47 @@
+[
+    LDF
+    [
+        LD [0 0]
+        LD [0 1]
+        LEQ
+        TSEL
+        [
+            LD [0 2]
+            RTN
+        ]
+        [
+            LD [0 0]
+            ; LDC 1
+            ; SUB
+            DEC
+            LD [0 1]
+            LD [0 2]
+            LDG T
+            CALL 3
+            LD [0 1]
+            ; LDC 1
+            ; SUB
+            DEC
+            LD [0 2]
+            LD [0 0]
+            LDG T
+            CALL 3
+            LD  [0 2]
+            ; LDC 1
+            ; SUB
+            DEC
+            LD [0 0]
+            LD [0 1]
+            LDG T
+            CALL 3
+            LDG T
+            TCALL 3
+            RTN
+        ]
+        STOP
+    ]
+    GSET T
+]
+
+[LDC 19 LDC 8 LDC 0 LDG T CALL 3 STOP]
+
