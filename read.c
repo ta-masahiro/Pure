@@ -234,7 +234,8 @@ void disassy(Vector * code, int indent) {
     int c, i; 
     Vector * v; 
     char * s; 
-
+    for(i= 0; i< indent; i ++ ) printf("\t"); 
+    printf("[\n"); 
     while (TRUE) {
          // vector_print(code);
         if (is_queu_empty(code)) break;
@@ -264,12 +265,12 @@ void disassy(Vector * code, int indent) {
                 printf("RTN\n");
                 break;  
             case SEL:
-                printf("SEL\t\n"); 
+                printf("SEL\n"); 
                 disassy((Vector * ) dequeue(code), indent + 1 ); 
                 disassy((Vector * ) dequeue(code), indent + 1 ); 
                 break; 
             case TSEL:
-                printf("TSEL\t\n"); 
+                printf("TSEL\n"); 
                 disassy((Vector * ) dequeue(code), indent + 1 ); 
                 disassy((Vector * ) dequeue(code), indent + 1 ); 
                 break; 
@@ -277,7 +278,7 @@ void disassy(Vector * code, int indent) {
                 printf("JOIN\n");
                 break;  
             case LDF:
-                printf("LDF\t[\n"); 
+                printf("LDF\n"); 
                 disassy((Vector *)dequeue(code), indent + 1); 
                 break; 
             case SET:
@@ -345,6 +346,8 @@ void disassy(Vector * code, int indent) {
                 break; 
         }
     }
+    for(i= 0; i< indent; i ++ ) printf("\t"); 
+    printf("]\n"); 
 
     code ->_cp = 0;  
 }
