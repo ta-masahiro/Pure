@@ -1,6 +1,12 @@
+[LDC 0 GSET count]
+
 [
     LDF
     [
+        LDG count
+        INC
+        GSET count
+        POP
         LD [0 0]
         LD [0 1]
         LEQ
@@ -44,4 +50,4 @@
 ]
 
 [LDC 19 LDC 8 LDC 0 LDG T CALL 3 STOP]
-
+[LDG count STOP]

@@ -183,13 +183,13 @@ Vector * chg_byte_code(Vector * code, Hash * G) {
         } else if (strcmp((char * )c, "LDG") == 0) {
             operand = dequeue(code); 
             v = Hash_get(G, (char * )operand); 
-            if (v == NULL) {
+             // if (v == NULL) {
                  push(t, (void * )LDG); 
                  push(t, operand);
-            } else {
-                push(t, (void *) LDC); 
-                push(t, (void * )( * v)); 
-            } 
+             // } else {
+             //     push(t, (void *) LDC); 
+             //     push(t, (void * )( * v)); 
+             // } 
         } else if (strcmp((char * )c, "GSET") == 0) {
             push(t, (void * )GSET); 
             push(t, dequeue(code)); 
@@ -211,7 +211,7 @@ Vector * chg_byte_code(Vector * code, Hash * G) {
         } else if (strcmp((char * )c, "LDV") == 0) {
             push(t, (void * )LDV); 
         } else if (strcmp((char * )c, "VSET") == 0) {
-            push(t, (void * )VEC); 
+            push(t, (void * )VSET); 
         } else if (strcmp((char * )c, "HASH") == 0) {
             push(t, (void * )HASH); 
         } else if (strcmp((char * )c, "LDH") == 0) {
@@ -229,110 +229,132 @@ Vector * chg_byte_code(Vector * code, Hash * G) {
     } 
     return t; 
 }
- /* 
+ 
 void disassy(Vector * code, int indent) {
-    void * c; 
+    int c, i; 
     Vector * v; 
+    char * s; 
 
-    while (1) {
+    while (TRUE) {
          // vector_print(code);
-        if ((c = dequeue(code)) == NULL) break;
-        for(i == 0; i< indent; i ++ ) printf("\t"); 
+        if (is_queu_empty(code)) break;
+        c = (int)dequeue(code); 
+        for(i= 0; i< indent; i ++ ) printf("\t"); 
         switch(c) {  
             case STOP:
                 printf("STOP\n");
                 break;  
             case LDC :
-                printf("LDC\t", (long)dequeue(code));
+                printf("LDC\t%ld\n", (long)dequeue(code));
                 break;   
             case LD :
-                v = (Vector * )dequeu(code); 
+                v = (Vector * )dequeue(code); 
                 printf("LD\t[%ld\t%ld]\n", (long)vector_ref(v, 0), (long)vector_ref(v, 1));  
+                break; 
             case ADD:
-                printf("ADD\n"); 
+                printf("ADD\n");
+                break;  
             case CALL:
-                print("CALL\t%ld\n", (long)dequeue(code)); 
+                printf("CALL\t%ld\n", (long)dequeue(code));
+                break;  
             case TCALL:
-                print("TCALL\t%ld\n", (long)dequeue(code)); 
+                printf("TCALL\t%ld\n", (long)dequeue(code));
+                break;  
             case RTN:
-                printf("RTN\n"); 
+                printf("RTN\n");
+                break;  
             case SEL:
                 printf("SEL\t\n"); 
                 disassy((Vector * ) dequeue(code), indent + 1 ); 
                 disassy((Vector * ) dequeue(code), indent + 1 ); 
+                break; 
             case TSEL:
                 printf("TSEL\t\n"); 
                 disassy((Vector * ) dequeue(code), indent + 1 ); 
                 disassy((Vector * ) dequeue(code), indent + 1 ); 
-        } else if (strcmp((char * )c, "JOIN") == 0) {
-            push(t, (void * )JOIN); 
-        } else if (strcmp((char * )c, "LDF") == 0) {
-            push(t, (void * )LDF); 
-            push(t, chg_byte_code ((Vector * ) dequeue(code), G)); 
-             // push(t, chg_byte_code ((Vector * ) dequeue(code))); 
-        } else if (strcmp((char * )c, "SET") == 0) {
-            push(t, (void * )SET); 
-            push(t, dequeue(code)); 
-        } else if (strcmp((char * )c, "LEQ") == 0) {
-            push(t, (void * )LEQ); 
-        } else if (strcmp((char * )c, "EQ") == 0) {
-            push(t, (void * )EQ); 
-        } else if (strcmp((char * )c, "LDG") == 0) {
-            operand = dequeue(code); 
-            v = Hash_get(G, (char * )operand); 
-             if (v == NULL) {
-                 push(t, (void * )LDG); 
-                 push(t, operand);
-             } else {
-                 push(t, (void *) LDC); 
-                 push(t, (void * )( * v)); 
-             } 
-        } else if (strcmp((char * )c, "GSET") == 0) {
-            push(t, (void * )GSET); 
-            push(t, dequeue(code)); 
-        } else if (strcmp((char * )c, "SUB") == 0) {
-            push(t, (void * )SUB); 
-        } else if (strcmp((char * )c, "DEC") == 0) {
-            push(t, (void * )DEC); 
-        } else if (strcmp((char * )c, "INC") == 0) {
-            push(t, (void * )INC); 
-        } else if (strcmp((char * )c, "POP") == 0) {
-            push(t, (void * )POP); 
-        } else if (strcmp((char * )c, "MUL") == 0) {
-            push(t, (void * )MUL); 
-        } else if (strcmp((char * )c, "DIV") == 0) {
-            push(t, (void * )DIV); 
-        } else if (strcmp((char * )c, "VEC") == 0) {
-            push(t, (void * )VEC); 
-            push(t, dequeue(code)); 
-        } else if (strcmp((char * )c, "LDV") == 0) {
-            push(t, (void * )LDV); 
-        } else if (strcmp((char * )c, "VSET") == 0) {
-            push(t, (void * )VEC); 
-        } else if (strcmp((char * )c, "HASH") == 0) {
-            push(t, (void * )HASH); 
-        } else if (strcmp((char * )c, "LDH") == 0) {
-            push(t, (void * )LDH); 
-        } else if (strcmp((char * )c, "HSET") == 0) {
-            push(t, (void * )HSET); 
-        } else if (strcmp((char * )c, "VPUSH") == 0) {
-            push(t, (void * )VPUSH); 
-        } else if (strcmp((char * )c, "VPOP") == 0) {
-            push(t, (void * )VPOP); 
-        } else {
-            printf("Unknkown Command %s\n", (char * )c); 
-            break; 
+                break; 
+            case JOIN:
+                printf("JOIN\n");
+                break;  
+            case LDF:
+                printf("LDF\t[\n"); 
+                disassy((Vector *)dequeue(code), indent + 1); 
+                break; 
+            case SET:
+                v = (Vector * )dequeue(code); 
+                printf("SET\t[%ld %ld]\n", (long)vector_ref(v, 0), (long)vector_ref(v, 1));
+                break;  
+            case LEQ:
+                printf("LEQ\n");
+                break;  
+            case EQ:
+                printf("EQ\n");
+                break;  
+            case LDG:
+                s = (char * )dequeue(code);
+                printf("LDG\t%s\n", s);
+                break;   
+            case GSET:
+                s = (char * )dequeue(code);
+                printf("GSET\t%s\n", s);
+                break;  
+            case SUB:
+                printf("SUB\n");
+                break; 
+            case DEC:
+                printf("DEC\n");
+                break;  
+            case INC:
+                printf("INC\n");
+                break;  
+            case POP:
+                printf("POP\n");
+                break;  
+            case MUL:
+                printf("MUL\n");
+                break;  
+            case DIV:
+                printf("DIV\n");
+                break;  
+            case VEC:
+                printf("VEC\t%ld\n",(long)dequeue(code));
+                break;  
+            case LDV:
+                printf("LDV\n");
+                break;  
+            case VSET:
+                printf("VSET\n");
+                break;  
+            case HASH:
+                printf("HASH\n");
+                break;  
+            case LDH:
+                printf("LDH\n");
+                break;  
+            case HSET:
+                printf("HSET\n");
+                break;  
+            case VPUSH:
+                printf("VPUSH\n");
+                break;  
+            case VPOP:
+                printf("VPOP\n");
+                break;  
+            default:
+                printf("Unknkown Command %s\n", (char * )c); 
+                break; 
         }
-    } 
-    return t; 
+    }
+
+    code ->_cp = 0;  
 }
- */ 
+ 
 int main(int argc, char * argv[]) {
     char c; 
     Vector  * code,  * t; 
     Vector * S = vector_init(5); 
     Vector * E = vector_init(5); 
-    Vector * C ; 
+    Vector * C, * CC ; 
     Vector * R = vector_init(5); 
     Vector * EE = vector_init(5); 
     Hash * G = Hash_init(128); 
@@ -353,6 +375,7 @@ int main(int argc, char * argv[]) {
                 vector_print(code);
                 C = chg_byte_code(code, G); 
                 vector_print(C);
+                disassy(C, 0);
                 v = (long)eval(S, E, C, R, EE, G);
                 printf("%ld\n", v);    
                 break;   
