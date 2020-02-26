@@ -35,7 +35,8 @@ Vector * vector_copy0(Vector * v) ;
 void vector_resize(Vector * s);
 void vector_print(Vector * s) ;
 
-
+#ifndef INLINE
+#define INLINE
 inline int is_stac_empty(Vector * s) {
     return s ->_sp == 0; 
 }
@@ -66,6 +67,7 @@ inline void ** vector_ref(Vector * v, int index) {
 inline void vector_set(Vector * v, int index, void ** val) {
     v ->_table[index] = val; 
 }
+#endif
 
 typedef struct Data {
     char *key;

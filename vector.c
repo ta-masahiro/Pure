@@ -21,45 +21,52 @@ Vector *  vector_init( int maxN) {
     s ->_sp = 0;  
     return s; 
 }
-/*
-int is_stac_empty(Vector * s) {
-    return s ->_sp == 0; 
-}
 
-int is_queu_empty(Vector * s) {
-    return s ->_sp == s ->_cp; 
-}
+extern inline int is_stac_empty(Vector * s);
+//{
+//    return s ->_sp == 0; 
+//}
+
+extern inline int is_queu_empty(Vector * s);
+//{
+//    return s ->_sp == s ->_cp; 
+//}
 
 void vector_resize(); 
 
-inline void push(Vector * s, void * data) {
-    if (s ->_sp >= s ->_size ) vector_resize(s);  
-    s ->_table[(s ->_sp) ++ ] = data;
-}
+extern inline void push(Vector * s, void * data);
+//{
+//    if (s ->_sp >= s ->_size ) vector_resize(s);  
+//    s ->_table[(s ->_sp) ++ ] = data;
+//}
 
 #define enqueue push
 
-inline void * pop(Vector * s) {
-    return s ->_table[  -- (s ->_sp)]; 
-}
+extern inline void * pop(Vector * s);
+//{
+//    return s ->_table[  -- (s ->_sp)]; 
+//}
 
  // #define dequeue(s) s->_table[(s->_cp)** ]
  
-inline void * dequeue(Vector * s) {
-    if (s ->_cp > s ->_sp ) {
-        // printf("queue underflow\n");
-        return NULL;  }
-    return s ->_table[ (s ->_cp) ++  ]; 
-}
+extern inline void * dequeue(Vector * s);
+//{
+//    if (s ->_cp > s ->_sp ) {
+//        // printf("queue underflow\n");
+//        return NULL;  }
+//    return s ->_table[ (s ->_cp) ++  ]; 
+//}
  
-inline void ** vector_ref(Vector * v, int index) {
-    return v ->_table[index]; 
-}
+extern inline void ** vector_ref(Vector * v, int index);
+//{
+//    return v ->_table[index]; 
+//}
 
-inline void vector_set(Vector * v, int index, void ** val) {
-    v ->_table[index] = val; 
-}
-*/ 
+extern inline void vector_set(Vector * v, int index, void ** val);
+//{
+//    v ->_table[index] = val; 
+//}
+ 
 Vector * vector_copy1(Vector * v) {
     Vector * s = (Vector * )malloc(sizeof(Vector)); 
     s ->_size = v ->_size; 
