@@ -133,11 +133,41 @@ enum CODE {STOP, LDC, LD, ADD, CALL, RTN, SEL, JOIN, LDF, SET, LEQ, LDG, GSET, S
  //        0     1    2   3    4     5    6    7     8    9    10   11   12    13   \
  //        14   15     16    17   18  19   20   21   22   23   24    25    26   27
 
+char code_name[][6] = {"STOP","LDC","LD","ADD","CALL","RTN","SEL","JOIN","LDF","SET","LEQ","LDG","GSET","SUB",\
+                  "DEC","TCALL","TSEL","POP","EQ","INC","MUL","DIV","VEC","LDV","VSET","HASH","LDH","HSET",\
+                  "VPUSH","VPOP"};
+
+int code_pr_size[] = {0, 1, 1, 0, 1, 0, 2, 0, 1, 1, 0, 1, 1, 0,\
+                  0, 1, 2, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0,\
+                  0, 0};
+
+void code_optimize(Vector * code, Hash *G){
+    char * key;
+    void ** v;
+    void * c;
+    while ((c = dequeue(code)) != NULL) {
+        //printf("%ld\t%s\n",(long)c,code_name[(long)c]);
+        if ((long)c==LDG) {
+            key = (char *)dequeue(code);
+            if ((v=Hash_get(G, key))==NULL || (long)code->_table[code->_cp] != CALL || (long)code->_table[code->_cp] != TCALL)  continue;
+            code->_table[code->_cp - 1] = (void *)( *v);
+            code->_table[code->_cp - 2] =(void *)LDC;
+        } else if ((long)c==SEL || (long)c==TSEL) {
+            code_optimize((Vector*)dequeue(code),G);
+            code_optimize((Vector*)dequeue(code),G);
+        } else if ((long)c==LDF) {
+            code_optimize((Vector*)dequeue(code),G);
+        } else (code->_cp) += code_pr_size[(long)c];
+    }
+    code->_cp = 0;
+}
+
+
 Vector * chg_byte_code(Vector * code, Hash * G) {
     void * c, * operand, ** v; 
     Vector * t = vector_init(3);
  
-    while (1) {
+    while (TRUE) {
          // vector_print(code);
         if ((c = dequeue(code)) == NULL) break;  
         if (strcmp((char * )c, "STOP") == 0) {
@@ -250,7 +280,7 @@ void disassy(Vector * code, int indent) {
                 break;   
             case LD :
                 v = (Vector * )dequeue(code); 
-                printf("LD\t[%ld\t%ld]\n", (long)vector_ref(v, 0), (long)vector_ref(v, 1));  
+                printf("LD\t[%ld %ld]\n", (long)vector_ref(v, 0), (long)vector_ref(v, 1));  
                 break; 
             case ADD:
                 printf("ADD\n");
@@ -379,6 +409,8 @@ int main(int argc, char * argv[]) {
                 C = chg_byte_code(code, G); 
                 vector_print(C);
                 disassy(C, 0);
+                code_optimize(C,G);
+                disassy(C,0);
                 v = (long)eval(S, E, C, R, EE, G);
                 printf("%ld\n", v);    
                 break;   
