@@ -1,27 +1,5 @@
-/* 
-#include <stdio.h> 
-#include <stdlib.h> 
-#include <string.h>
-
-typedef struct Data { 
-    char *key; 
-    void *val;
-} Data;
-
-typedef struct Hash {
-    Data *hashTable;
-    // int   type;
-    int   size, entries;        // サイズ、登録数
-} Hash;
-
-Hash * Hash_init(int size);
-void Hash_resize(Hash * h, int newSize);     // 内部関数
-void Hash_free(Hash *pHash);
-int  hash(char *key, int size);                 // 内部関数SH
-int  Hash_put(Hash * h, char *key, void *val);
-void  ** Hash_get(Hash * h, char *key);
-*/
 #include "vm.h"
+
 Hash * Hash_init(int size) {
     Hash * h = (Hash * )malloc(sizeof(Hash)); 
     h ->size = size;
@@ -74,12 +52,7 @@ int Hash_put(Hash * hashT, char *key, void *val) {
     printf("Error: Hash Table Full");
     return -1;
 }
-/* 
-int Hash_isin(Hash * hashT, char * key) {
-    if (hashT ->hashTable[hash(key, hashT ->size)].key == NULL) return FALSE; 
-    return TRUE; 
-}
-*/ 
+
 void  **Hash_get(Hash * hashT, char *key) {
     int n, h = hash(key, hashT ->size);
     for (n = 0; n < hashT ->size; n++) {

@@ -142,15 +142,16 @@ def Eval(s):
 def load(file_name):
     f = open(file_name)
     s = f.read()
-    print(s)
+    #print(s)
     result = parser.parse(s)
     #c_time = time.time()
-    v = eval([], [G], result + ['STOP'], 0, [], [])
-    #e_time = time.time()
-    if   type(v) == list and v != [] and v[0] == 'CL':print('Usser Function')
-    elif type(v) == list and v != [] and v[0] == 'MACRO_CL':print ('User Macro')
-    elif type(v) == list and v != [] and v[0] == 'CONT':print ('User Continueation')
-    else:print(v)
+    V = eval([], [G], result + ['STOP'], 0, [], [])
+    for v in V:
+        #e_time = time.time()
+        if   type(v) == list and v != [] and v[0] == 'CL':print('Usser Function')
+        elif type(v) == list and v != [] and v[0] == 'MACRO_CL':print ('User Macro')
+        elif type(v) == list and v != [] and v[0] == 'CONT':print ('User Continueation')
+        else:print(v)
     #print('c_time  : ', int((1000000 * (c_time - s_time))) / 1000000)
     #print('e_time  : ', int((1000000 * (e_time - c_time))) / 1000000)
     G['_'] = v
@@ -417,7 +418,7 @@ def p_term_2op(p):
 
     if len(p[1]) == 2 and len(p[3]) == 2 and p[1][0] ==  'LDC' and p[3][0] ==  'LDC':
         v = eval([], [G], p[0] + ['STOP'],0,  [], [])
-        p[0] = ['LDC', vi[ - 1]]
+        p[0] = ['LDC', v[ - 1]]
     ###以下は定数の繰り込み
     #try:
     #    #print(p[0])

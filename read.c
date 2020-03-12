@@ -261,7 +261,8 @@ Vector * chg_byte_code(Vector * code, Hash * G) {
 }
  
 void disassy(Vector * code, int indent) {
-    int c, i; 
+    int i;
+    long c; 
     Vector * v; 
     char * s; 
     for(i= 0; i< indent; i ++ ) printf("\t"); 
@@ -269,7 +270,7 @@ void disassy(Vector * code, int indent) {
     while (TRUE) {
          // vector_print(code);
         if (is_queu_empty(code)) break;
-        c = (int)dequeue(code); 
+        c = (long)dequeue(code); 
         for(i= 0; i< indent; i ++ ) printf("\t"); 
         switch(c) {  
             case STOP:

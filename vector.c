@@ -1,18 +1,5 @@
-/* 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#define initN   4096       //   vectorのイニシャルサイズ  
-
-typedef struct Vector {
-    int     _size; 
-    void ** _table;  
-    int     _cp;
-    int     _sp;  
-} Vector; 
-*/
 #include "vm.h"
+
 Vector *  vector_init( int maxN) {
     Vector * s = (Vector * )malloc(sizeof(Vector)); 
     s ->_size = maxN; 
@@ -23,50 +10,17 @@ Vector *  vector_init( int maxN) {
 }
 
 extern inline int is_stac_empty(Vector * s);
-//{
-//    return s ->_sp == 0; 
-//}
-
 extern inline int is_queu_empty(Vector * s);
-//{
-//    return s ->_sp == s ->_cp; 
-//}
-
 void vector_resize(); 
 
 extern inline void push(Vector * s, void * data);
-//{
-//    if (s ->_sp >= s ->_size ) vector_resize(s);  
-//    s ->_table[(s ->_sp) ++ ] = data;
-//}
-
 #define enqueue push
 
 extern inline void * pop(Vector * s);
-//{
-//    return s ->_table[  -- (s ->_sp)]; 
-//}
-
- // #define dequeue(s) s->_table[(s->_cp)** ]
- 
 extern inline void * dequeue(Vector * s);
-//{
-//    if (s ->_cp > s ->_sp ) {
-//        // printf("queue underflow\n");
-//        return NULL;  }
-//    return s ->_table[ (s ->_cp) ++  ]; 
-//}
- 
 extern inline void ** vector_ref(Vector * v, int index);
-//{
-//    return v ->_table[index]; 
-//}
-
 extern inline void vector_set(Vector * v, int index, void ** val);
-//{
-//    v ->_table[index] = val; 
-//}
- 
+
 Vector * vector_copy1(Vector * v) {
     Vector * s = (Vector * )malloc(sizeof(Vector)); 
     s ->_size = v ->_size; 
@@ -82,20 +36,7 @@ Vector * vector_copy0(Vector * v) {
     r->_sp = v->_sp;r ->_cp = v ->_cp; 
     return r;
 }
-/* 
-Vector * vector_copy00(Vector * v) {
-    Vector * r = vector_init((v ->_sp) - (v ->_cp) + 1);
-    memcpy(r ->_table, (v ->_table) + (v ->_cp) * sizeof(void * ), (r->_size)*sizeof(void*));
-    r->_sp = r ->_size; r ->_cp = 0; 
-    return r;
-}
 
-void vector_copy2(Vector * S, int i, int j, Vector *D, int k);
-    memcpy(S + i*sizeof(void*),D + k*(sizeof(void *)),(i-i+1)*sizeof(void*));
-
-Vector * vector_sub(Vector v, int i, int j);
-    return vector_init(j-i+1);
-*/
 void vector_resize(Vector * s) {
     int oldN = s ->_size; 
     int maxN = 3 * oldN / 2 + 1;     /* 1.5倍に拡大  */   
@@ -104,6 +45,7 @@ void vector_resize(Vector * s) {
     s ->_size = maxN;
     printf("vector resize:%d to %d\n", oldN, maxN); // vector_print(s);    
 }
+
 void vector_print(Vector * s) {
     int i;
     printf("[ ");  
@@ -112,13 +54,6 @@ void vector_print(Vector * s) {
     }
     printf("]\n"); 
 }
- /* 
-Item new_int(long l) {
-    Item t;  
-    t._int_data = l; 
-    return t; 
-}
- */ 
 
  /* 以下は適当なテスト   
 int main(int argc, char * argv[]) {
