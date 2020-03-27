@@ -1,4 +1,5 @@
 import copy
+from fractions import Fraction
 def eval(S, E, C, cp, R, EE):
     #print(S, E,C , cp, R, EE)
     while True:
@@ -51,7 +52,8 @@ def eval(S, E, C, cp, R, EE):
             S[ - 2]  *= S[ - 1]
             del(S[ - 1])
         elif inst == 'DIV':
-            S[ - 2] /= S[ - 1]
+            if isinstance(S[ - 2], int) and isinstance(S[ - 1], int):S[ - 2] = Fraction(S[ - 2], S[ - 1])
+            else:S[ - 2] /= S[ - 1]
             del(S[ - 1])
         elif inst == 'POW':
             S[ - 2] = S[ - 2] ** S[ - 1]

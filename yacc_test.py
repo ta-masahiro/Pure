@@ -233,7 +233,11 @@ def p_expression_set(p):
                     | SET ID LBRAK expression RBRAK LET expression
 
     '''
-    # expression_set    | ID LPAREN expression RPAREN expression
+    #                | ID ADD_LET expression
+    #                | ID MUL_LET expression
+    #                | ID DIV_LET expression
+    #                | ID LBRAK expression REF_LET expression
+    #                | ID LBRAC expression FN_LET expression
     if len(p) == 4:
         p[0] = p[3] + ['SET', p[1]]
         #p[0]=p[3]+['LD',p[1],'SET']
@@ -255,19 +259,15 @@ def p_expression_if(p):
     expression_if   : IF expression COL expression COL expression
                     | IF expression COL expression
     '''
-    if len(p) == 5:
-        p[0] = p[2] + ['SEL', p[4] + ['JOIN'], ['LDC', None] + ['JOIN']]
-    else:
-        p[0] = p[2] + ['SEL', p[4] + ['JOIN'], p[6] + ['JOIN']]
+    if len(p) == 5: ng_exp = ['LDC', None]
+    else: ng_exp = p[6]
+    p[0] = p[2] + ['SEL', p[4] + ['JOIN'], ng_exp + ['JOIN']]
     # 定数の展開
     #print(p[0])
     if len(p[2]) == 2 and p[2][0] ==  'LDC' :
         #v = eval([], [G], p[0] + ['STOP'],0,  [], [])
         if p[2][1] :p[0] = p[4]
-        else:
-            if len(p) == 5:
-                p[0] = ['LDC', None]
-            else:p[0] = p[6]
+        else:p[0] = ng_exp
 
 # lambda式
 def p_expression_lambda(p):

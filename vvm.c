@@ -30,7 +30,7 @@ void * eval(Vector * S, Vector * E, Vector * C, Vector * R, Vector * EE, Hash * 
     void * ( * func);
     Hash * h;  
      // mpz_t  mpr; 
-    while (1) {
+    while (TRUE) {
         inst = (long)dequeue(C); 
          // printf("%d\n", inst); 
         switch(inst) {

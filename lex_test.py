@@ -6,6 +6,7 @@ reserved = {'set':'SET', 'if':'IF', 'lambda':'LAMBDA','def':'DEF', 'True':'TRUE'
         'False':'FALSE', 'is':'IS', 'apply':'APPLY', 'call_cc':'CALLCC', 'var':'VAR', 'while':'WHILE', 'macro':'MACRO'}
 tokens = ['COMMENT', 'STR', 'INT', 'FLOAT','FRACT', 'PLUS','MINUS','TIMES','POW', 'DIVIDE',
         'LPAREN','RPAREN','LBRAC', 'RBRAC','LBRAK', 'RBRAK',  'CAMMA','COL','SEMICOL','DOTS', 'LET',
+        #'ADD_LET', 'SUB_LET', 'MUL_LET', 'DIV_LET', 'REF_LET', 'FN_LET', 
         'EQUAL','NEQ', 'GEQ', 'LEQ', 'GT', 'LT', 'NOT', 'ID', 'PERC'] + list(reserved.values())
  # 正規表現による簡単なトークンのルール
 t_PLUS   = r'\+'
@@ -25,6 +26,12 @@ t_COL    = r':'
 t_SEMICOL= r';'
 t_DOTS   = r'\.\.'
 t_LET    = r'='
+#t_ADD_LET = r'\+='
+#t_SUB_LET = r'-='
+#t_MUL_LET = r'\*='
+#t_DIV_LET = r'/='
+#t_REF_LET = r'\]='
+#t_FN_LET  = r'\)='
 t_EQUAL  = r'=='
 t_NEQ    = r'!='
 t_GEQ    = r'>='
