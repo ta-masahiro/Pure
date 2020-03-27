@@ -93,8 +93,8 @@ def macrofunction_expand(c, p):
                                                             #
                 dd = search_nr(body, 'WHILE')               # 引数入れ替え後のWHILE位置を算出
                 if cc == []:
-                    if dd != []:error() 
-                elif len(cc) != len(dd)  :error()
+                    if dd != []:p_error("Macro Eror") 
+                elif len(cc) != len(dd)  :p_error("Macro Error")
                 else:
                     j = 0
                     for ccc in cc:
