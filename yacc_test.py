@@ -253,14 +253,21 @@ def p_expression_set(p):
 def p_expression_if(p):
     '''
     expression_if   : IF expression COL expression COL expression
+                    | IF expression COL expression
     '''
-    p[0] = p[2] + ['SEL', p[4] + ['JOIN'], p[6] + ['JOIN']]
+    if len(p) == 5:
+        p[0] = p[2] + ['SEL', p[4] + ['JOIN'], ['LDC', None] + ['JOIN']]
+    else:
+        p[0] = p[2] + ['SEL', p[4] + ['JOIN'], p[6] + ['JOIN']]
     # 定数の展開
     #print(p[0])
     if len(p[2]) == 2 and p[2][0] ==  'LDC' :
         #v = eval([], [G], p[0] + ['STOP'],0,  [], [])
         if p[2][1] :p[0] = p[4]
-        else:p[0] = p[6]
+        else:
+            if len(p) == 5:
+                p[0] = ['LDC', None]
+            else:p[0] = p[6]
 
 # lambda式
 def p_expression_lambda(p):
