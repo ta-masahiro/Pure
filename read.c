@@ -82,7 +82,7 @@ Vector *  get_code(Stream * s) {
     Vector * code = vector_init(10); 
     char str_buff[255]; int str_buff_p = 0; 
 
-    while (1) {
+    while (TRUE) {
         c = get_char(s); // printf("%c\n", c);  
         if (isblank(c)) continue; 
         if (c == ']')
@@ -402,8 +402,8 @@ int main(int argc, char * argv[]) {
         if (fp == NULL) {printf("file %s doesn't exist\n", argv[1]); return  - 1; }
         s = new_stream(fp); 
     }
-    while (1) {
-         while (1) {
+    while (TRUE) {
+         while (TRUE) {
             if ((c = get_char(s)) == '[') { 
                 code = get_code(s);
                 vector_print(code);

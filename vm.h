@@ -11,7 +11,7 @@
  
 #define TRUE    1
 #define FALSE   0
-#define initN   4096     /* vectorのイニシャルサイズ  */
+//#define initN   4096     /* vectorのイニシャルサイズ  */
 
 typedef struct Vector {
     int     _size;
@@ -22,14 +22,7 @@ typedef struct Vector {
 } Vector;
 
 Vector *  vector_init( int maxN);
-//int is_stac_empty(Vector * s);
-//int is_queu_empty(Vector * s);
-//extern void push(Vector * s, void * data);
 #define enqueue push
-//extern void * pop(Vector * s) ;
-//extern void * dequeue(Vector * s);
-//extern void ** vector_ref(Vector * v, int index) ;
-//extern void vector_set(Vector * v, int index, void ** val);
 Vector * vector_copy1(Vector * v);
 Vector * vector_copy0(Vector * v) ;
 void vector_resize(Vector * s);
@@ -87,5 +80,3 @@ int  hash(char *key, int size);                 // 内部関数SH
 int  Hash_put(Hash * h, char *key, void *val);
 void  ** Hash_get(Hash * h, char *key);
 void  * eval(Vector * S, Vector * E, Vector * C, Vector * R, Vector * EE, Hash * G); 
- // #include "vector.c"
- // #include "hash.c"
