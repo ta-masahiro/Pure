@@ -10,7 +10,8 @@
     }
     ;
     # mapref([[1, 2, 3], [4, 5, 6], [7, 8, 9]], 1) = [2, 5, 8]
-    def mapref(L,n) = {
+    #def mapref(L,n) = {
+    mapref = lambda(L, n) {
         loop=lambda(i,s) 
             if i<0 :
                 s 

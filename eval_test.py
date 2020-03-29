@@ -220,14 +220,14 @@ def eval(S, E, C, cp, R, EE):
         elif inst == 'RTN':
             E = EE.pop()
             C, cp = R.pop()
-        elif inst == 'SET': # ... value key SET ...  -> key = value に変更 
-            v = S[ - 1]
-            #k = S.pop()
-            k = C[cp]
+        elif inst == 'SET': # value, SET key, ...  -> value, key, set に変更 
             #v = S[ - 1]
+            k = S.pop()
+            #k = C[cp]
+            v = S[ - 1]
             #print( "val = ", v)
             #print("key = ", k)
-            cp += 1
+            #cp += 1
             ff = False
             #print(E)
             for e in E:
@@ -237,11 +237,12 @@ def eval(S, E, C, cp, R, EE):
                     break
             if not ff:(E[0])[k] = v
             #raise KeyError('Unknown Key: ',k)
-        elif inst == 'VSET':
+        elif inst == 'VSET': # value, ind, vset key, ... ->value, key, ind, vset 
             ind = S.pop()
+            k = S.pop()
             v = S[ - 1]
-            k = C[cp]
-            cp += 1
+            #k = C[cp]
+            #cp += 1
             ff = False
             #print(E)
             for e in E:

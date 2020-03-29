@@ -239,12 +239,14 @@ def p_expression_set(p):
     #                | ID LBRAK expression REF_LET expression
     #                | ID LBRAC expression FN_LET expression
     if len(p) == 4:
-        p[0] = p[3] + ['SET', p[1]]
-        #p[0]=p[3]+['LD',p[1],'SET']
+        #p[0] = p[3] + ['SET', p[1]]
+        p[0] = p[3]+['LDC',p[1],'SET']
     if len(p) == 5:
-        p[0] = p[4] + ['SET', p[2]]
+        #p[0] = p[4] + ['SET', p[2]]
+        p[0] = p[4] + ['LDC', p[2], 'SET']
     if len(p) == 8:
-        p[0] = p[7] + p[4] + ['VSET', p[2]]
+        #p[0] = p[7] + p[4] + ['VSET', p[2]]
+        p[0] = p[7] + p[4] + ['LDC',p[2],'VSET']
     #以下は定数の繰り込み
     #try:
     #    v = eval([], [G], p[3] + ['STOP'],0,  [], [])
@@ -333,15 +335,15 @@ def p_expression_func_decl(p):
     if len(p) == 7 :
         e = p[6]  + ['RTN']
         tail(e)
-        p[0] = ['LDF'] +[e]+[[]] + ['SET', p[2]]
+        p[0] = ['LDF'] +[e]+[[]] + ['LDC',p[2],'SET']
     if len(p) == 8 :
         e = p[7]  +  ['RTN']
         tail(e)
-        p[0] = ['LDF'] +[e]+[p[4]] + ['SET', p[2]]
+        p[0] = ['LDF'] +[e]+[p[4]] + ['LDC',p[2],'SET']
     if len(p) == 9 :
         e = p[8]  + ['RTN']
         tail(e)
-        p[0] = ['LDF'] +[e]+[p[4]+['..']] + ['SET', p[2]]
+        p[0] = ['LDF'] +[e]+[p[4]+['..']] + ['LDC',p[2], 'SET']
 
 def p_decl_exp(p):
     '''
@@ -349,7 +351,7 @@ def p_decl_exp(p):
                     | VAR ID LET expression
     '''
     if len(p) == 3: p[0] = ['DCL', p[2]]
-    if len(p) == 5: p[0] = ['DCL', p[2], 'POP'] + p[4] + ['SET', p[2]]
+    if len(p) == 5: p[0] = ['DCL', p[2], 'POP'] + p[4] + ['LDC', p[2], 'SET']
 
 def p_while_exp(p):
     '''
@@ -629,7 +631,7 @@ def p_factor_set(p):
     '''
     function_set    : SET LPAREN ID CAMMA expression RPAREN
     '''
-    p[0] = p[5] + ['SET', p[3]]
+    p[0] = p[5] + ['LDC', p[3], 'SET']
 def p_factor_apply(p):
     '''
     function_apply  : APPLY LPAREN params RPAREN
