@@ -1,5 +1,9 @@
-{   # 任意個数引数の加算
+{   _code = False; 
+    _time = False;
+    # 任意個数引数の加算
+    sum = lambda(x) (l = lambda(i, s) if i < 0:s:l(i - 1, s + x[i]))(len(x) - 1, 0); 
     add = lambda(x ..) {
+        var sum; 
         n=len(x); 
         sum = lambda(s,i) 
             if i>=n: 
@@ -116,17 +120,19 @@
     for  =  macro(exp1, exp2, exp3) {
                 exp1; 
                 while exp2: exp3
-            }
+    }
     ; 
     and  =  macro(exp1, exp2) 
                 if exp1: exp2: False
     ; 
     or  =   macro(exp1, exp2)
                 if exp1: True: exp2
-    ; 
-    foreach  = macro(x, l, exp) 
-                for(i = 0, i<len(l), {x = l[i]; exp; i = i + 1})
+    #; 
+    #foreach  = macro(x, l, exp) 
+    #            for(i = 0, i<len(l), {x = l[i]; exp; i = i + 1})
     ;
+    timeit  = macro(proc) {__t1__ = time(); proc; time() - __t1__}
+    ; 
     filter  = lambda(f, l) {
                 N=len(l);
                 g   = lambda(i, s)
@@ -136,7 +142,8 @@
                                 :push(s,l[i])
                                 :s
                         );
-                g(0,[])}
+                g(0,[])
+    }
     ; 
     reduce   =  lambda(fn, a, ls) {
                 N = len(ls); 
@@ -146,5 +153,44 @@
                         g(i + 1, fn(a, ls[i]))
                 ;
                 g(0, a)
-    }
-}
+                }
+    ;
+    fold_right=lambda(fn,a,ls) {
+                f = lambda(a,i)
+                    if i<0:
+                        a:
+                        f(fn(ls[i],a),i-1)
+                ;
+                f(a,len(ls)-1)
+                }
+    ; 
+    min  = lambda(v..) reduce(lambda(x, y) if x <= y:x:y, inf, v ); 
+    max  = lambda(v..) reduce(lambda(x, y) if x < y:y:x,  -inf, v); 
+    fib     = lambda(n) (f = lambda(n, a, b) if n == 0: b:   f(n - 1, a + b, a)) (n, 1, 0); 
+    fact    = lambda(n) (f = lambda(n, a) if n == 0: a: f(n - 1, a * n))(n, 1);
+    # random
+    _randseed = int(modf(time())[0] * (2 ** 32));  
+    _randseed64 = int(modf(time())[0] * (2 ** 64)); 
+    #rand32   = lambda() _randseed = (48271 * _randseed) % (2 ** 31 - 1)
+    rand32  = lambda() _randseed = (1103515245 * _randseed + 24691) % (2 ** 32 - 1); 
+    rand64  = lambda() _randseed64 = (2726289311198226789 * _randseed64 + 2531011)%(2 ** 64 - 1); 
+    randf   = lambda() rand64() * 1.0 / (2 ** 64); 
+    randrange = lambda(n, m) int(rand64() * (m - n + 1) / (2 ** 64)) + n; 
+    #
+    for_each     = lambda(fn, vs..){
+                        N = len(vs[0]);
+                        (
+                        l = lambda(i)
+                                if i >= N: 
+                                    None
+                                :{
+                                    apply(fn, mapref(vs, i)); 
+                                    l(i + 1)
+                                }
+                        )(0)
+                    }
+    ;
+    readtext     = lambda(f) {t = ""; while (s = readline(f)) != "":t = t + s; t }; 
+    readbuff     = lambda(f) {b = []; while (s = readline(f)) != "": b = b + [s]; b};
+    None
+ }

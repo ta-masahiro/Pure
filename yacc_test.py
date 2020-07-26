@@ -7,7 +7,7 @@ import math
 import cmath
 import operator 
 from fractions import Fraction
-
+import sys
 def List( * x):return list(x)
 def List_set(L, i, v):
     L[i] = v
@@ -81,7 +81,7 @@ def macrofunction_expand(c, p):
             body = copy.deepcopy(c[1])                      # bodyはマクロ本体
             #print(body)
             prms = c[2]                                     # prmsはパラメータリスト
-            print(body, prms)
+            #print(body, prms)
             i = 0
             for pp in prms:
                 #print(pp)
@@ -143,11 +143,12 @@ def load(file_name):
     f = open(file_name)
     s = f.read()
     #print(s)
-    result = parser.parse(s)
+    #result = parser.parse(s)
     #c_time = time.time()
-    V = eval([], [G], result + ['STOP'], 0, [], [])
+    V = eval([], [G], Compile(s), 0, [], [])
     for v in V:
         #e_time = time.time()
+        if v is None:break
         if   type(v) == list and v != [] and v[0] == 'CL':print('Usser Function')
         elif type(v) == list and v != [] and v[0] == 'MACRO_CL':print ('User Macro')
         elif type(v) == list and v != [] and v[0] == 'CONT':print ('User Continueation')
@@ -163,14 +164,21 @@ def Close(f):
     f.close()
 def Readline(f):
     return f.readline()
+def Prinf( * args):
+    print
 def Print_n(*args):
     print(*args,end="")
+def Print_f( *args):
+    print(args[0].format(*args[1:]), end = '')
+def Time():
+    return time.time()
 G = {'_':None, 'push':Push, 'pop':Pop, 'isin':isin, 'dict_isin':Dict_isin, 'load':load, 'range':range, 'eval':Eval, 'compile':Compile,
-        'list':list, 'Fraction':Fraction, 'printn':print, 'print':Print_n,'input':input,'int':int,'len':len, 'list':List, 
-        'list_set':List_set, 'dict':Dict, 'dict_set':Dict_set, 'dict_ref':Dict_ref, 'open':open, 'close':Close,
-        '_time':True, '_code':True, 'readline':Readline}
+        'list':list, 'Fraction':Fraction, 'printn':print, 'print':Print_n, 'printf':Print_f, 'input':input,'int':int,'len':len, 'list':List, 
+        'list_set':List_set, 'dict':Dict, 'dict_set':Dict_set, 'dict_ref':Dict_ref, 'open':open, 'close':Close,'stdin':sys.stdin, 'stdout':sys.stdout, 
+        'time':Time, '_time':True, '_code':True, 'readline':Readline}
 G.update(vars(operator))
 G.update(vars(math))
+G['__G__'] = G
 #G.update(vars(cmath))
 #G = {'print':print}
 #
@@ -178,8 +186,7 @@ G.update(vars(math))
 #
 def p_expression(p):
     '''
-    expression  : term
-                | expression_2op
+    expression  : expression_2op
                 | expression_set
                 | expression_if
                 | expression_lambda
@@ -192,11 +199,15 @@ def p_expression(p):
 # 2項演算式
 def p_expression_2op(p):
     '''
-    expression_2op  : expression PLUS expression
-                    | expression MINUS expression
-                    | expression ID expression
+    expression_2op  : term
+                    | expression_2op PLUS term
+                    | expression_2op MINUS term
+                    | expression_2op ID term
     '''
     #print(p)
+    if len(p) == 2:
+        p[0] = p[1]
+        return
     p[0] = p[1] + p[3]
     if      p[2] == '+': p[0] += ['ADD']
     elif    p[2] == '-': p[0] += ['SUB']
@@ -210,6 +221,7 @@ def p_expression_2op(p):
     else:p[0] += ['LD', p[2], 'CALL', 2]
 
     if len(p[1]) == 2 and len(p[3]) == 2 and p[1][0] ==  'LDC' and p[3][0] ==  'LDC':
+        #print(p[0])
         v = eval([], [G], p[0] + ['STOP'],0,  [], [])
         p[0] = ['LDC', v[ - 1]]
         return
@@ -246,7 +258,7 @@ def p_expression_set(p):
         p[0] = p[4] + ['LDC', p[2], 'SET']
     if len(p) == 8:
         #p[0] = p[7] + p[4] + ['VSET', p[2]]
-        p[0] = p[7] + p[4] + ['LDC',p[2],'VSET']
+        p[0] = p[7] + ['LDC', p[2]] + p[4] + ['VSET']
     #以下は定数の繰り込み
     #try:
     #    v = eval([], [G], p[3] + ['STOP'],0,  [], [])
@@ -390,8 +402,7 @@ def p_lieft_mult_exp(p):
 #
 def p_term(p):
     '''
-    term    : factor
-            | term_2op
+    term    : term_2op
             | term_1op
     '''
     p[0] = p[1] 
@@ -400,7 +411,8 @@ def p_term(p):
 #
 def p_term_2op(p):
     '''
-    term_2op    : term TIMES    factor
+    term_2op    : factor
+                | term TIMES    factor
                 | term DIVIDE   factor
                 | term POW      factor
                 | term PERC     factor
@@ -412,6 +424,9 @@ def p_term_2op(p):
                 | term LT       factor
                 | term IS       factor
     '''
+    if len(p) == 2:
+        p[0] = p[1]
+        return
     p[0] = p[1] + p[3]
     if      p[2] == '*' : p[0] += ['MUL']
     elif    p[2] == '/' : p[0] += ['DIV']
@@ -453,7 +468,8 @@ def p_term_1op(p):
 #
 def p_factor(p):
     '''
-    factor  : bool
+    factor  : bool 
+            | none
             | number
             | var
             | vector
@@ -471,6 +487,12 @@ def p_factor(p):
             | call_cc
     '''
     p[0] = p[1]
+# 値なし
+def p_none(p):
+    '''
+    none    : NONE
+    '''
+    p[0] = ['LDC',None]
 # 真偽値
 def p_factor_bool(p):
     '''
@@ -672,6 +694,7 @@ def p_factor_callcc(p):
 def p_error(p):     
     #print( "Syntax error in input")
     raise SyntaxError("SyntaxError: " + str(p))
+
 # 構文解析器の構築 
 parser = yacc.yacc() 
 from eval_test import eval
@@ -711,9 +734,10 @@ if __name__ == '__main__':
             V = eval([], [G], qq, 0, [], [])
             e_time = time.time()
             for v in V:
-                if type(v) == list and v != [] and v[0] == 'CL':print('User Function')
-                elif type(v) == list and v != [] and v[0] == 'MACRO_CL':print ('User Macro')
-                elif type(v) == list and v != [] and v[0] == 'CONT':print ('User Continueation')
+                if v is None:break
+                if type(v) == list and v != [] and v[0] == 'CL':print('<user function at', hex(id(v)) + '>')
+                elif type(v) == list and v != [] and v[0] == 'MACRO_CL':print ('<user macro at', hex(id(v)), '>')
+                elif type(v) == list and v != [] and v[0] == 'CONT':print ('<continueation at', hex(id(v)), '>')
                 elif type(v) == str:print(repr(v))
                 else:print(v)
             if G['_time']:print('c_time  : ', int((1000000 * (c_time - s_time))) / 1000000, '\te_time  : ', int((1000000 * (e_time - c_time))) / 1000000)

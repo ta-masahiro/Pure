@@ -2,9 +2,9 @@
 import ply.lex as lex
 from fractions import Fraction
 # トークンリスト 常に必須
-reserved = {'set':'SET', 'if':'IF', 'lambda':'LAMBDA','def':'DEF', 'True':'TRUE', 
-        'False':'FALSE', 'is':'IS', 'apply':'APPLY', 'call_cc':'CALLCC', 'var':'VAR', 'while':'WHILE', 'macro':'MACRO'}
-tokens = ['COMMENT', 'STR', 'INT', 'FLOAT','FRACT', 'PLUS','MINUS','TIMES','POW', 'DIVIDE',
+reserved = {'set':'SET', 'if':'IF', 'lambda':'LAMBDA','def':'DEF', 'True':'TRUE', 'None':'NONE',  
+        'False':'FALSE', 'is':'IS', 'in':'IN', 'apply':'APPLY', 'call_cc':'CALLCC', 'var':'VAR', 'while':'WHILE', 'macro':'MACRO'}
+tokens = ['COMMENT', 'STR', 'INT', 'FLOAT','FRACT', 'PLUS','MINUS','TIMES','POW', 'DIVIDE','INC', 'DEC', 
         'LPAREN','RPAREN','LBRAC', 'RBRAC','LBRAK', 'RBRAK',  'CAMMA','COL','SEMICOL','DOTS', 'LET',
         #'ADD_LET', 'SUB_LET', 'MUL_LET', 'DIV_LET', 'REF_LET', 'FN_LET', 
         'EQUAL','NEQ', 'GEQ', 'LEQ', 'GT', 'LT', 'NOT', 'ID', 'PERC'] + list(reserved.values())
@@ -14,6 +14,8 @@ t_MINUS  = r'-'
 t_TIMES  = r'\*'
 t_POW    = r'\*\*'
 t_DIVIDE = r'/'
+t_INC    = r'\+\+'
+t_DEC    = r'--'
 t_PERC   = r'%'
 t_LPAREN = r'\('
 t_RPAREN = r'\)'
@@ -46,6 +48,8 @@ t_LAMBDA = r'lambda'
 t_TRUE   = r'True'
 t_FALSE  = r'False'
 t_IS     = r'is'
+t_IN     = r'in'
+t_NONE   = r'None' 
 t_APPLY  = r'apply'
 t_CALLCC = r'call_cc'
 t_VAR    = r'var'
@@ -82,12 +86,12 @@ def t_ID(t):
     return t
 def t_STR(t):
     #r'"(?:[\\].|[^\\"])*"'
-    r'"((\\"|[^"]) * )"'
+    r'"((\\"|[^"])*)"'
     t.value = (t.value)[1: - 1].encode().decode('unicode_escape')
     return t
 def t_COMMENT(t):
     #r'/*""/"*([^*/]|[^*]"/"|"*"[^/])*"*"*"*/'
-    r'\#. * '
+    r'\#.*'
     pass
 # 行番号をたどれるように 
 def t_newline(t):

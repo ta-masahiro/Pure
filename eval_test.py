@@ -319,6 +319,7 @@ def eval(S, E, C, cp, R, EE):
         #    S.append('Continuation!')
         else:
             print(inst)
+            #print(E)
             raise KeyError('Unknown Code:' + inst)
 
 
