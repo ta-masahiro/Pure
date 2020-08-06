@@ -18,10 +18,10 @@
 #include "vm.h"
 enum CODE {STOP, LDC,   LD,   ADD,  CALL, RTN, SEL, JOIN, LDF, SET, LEQ,  LDG,  GSET, SUB, \
            DEC,  TCALL, TSEL, DROP, EQ,   INC, MUL, DIV,  VEC, LDV, VSET, HASH, LDH,  HSET, \
-           VPUSH, VPOP};
+           VPUSH, VPOP, LADD, LSUB, LMUL, ITOL, LPR};
  //        0     1      2     3     4     5    6    7     8    9    10    11    12    13   \
  //        14    15     16    17    18    19   20   21    22   23   24    25    26    27
- //        28    29
+ //        28    29     30    31    32    33
 void * eval(Vector * S, Vector * E, Vector * C, Vector * R, Vector * EE, Hash * G) {
     char * key; 
     long inst, ff, i, j, n, p; 
@@ -29,7 +29,7 @@ void * eval(Vector * S, Vector * E, Vector * C, Vector * R, Vector * EE, Hash * 
     void ** g, * v; 
     void * ( * func);
     Hash * h;  
-     // mpz_t  mpr; 
+    mpz_ptr  x, y, z; 
     while (TRUE) {
         inst = (long)dequeue(C); 
          // printf("%d\n", inst); 
@@ -74,9 +74,22 @@ void * eval(Vector * S, Vector * E, Vector * C, Vector * R, Vector * EE, Hash * 
             case ADD:
                 push(S, (void * )((long)pop(S) + (long)pop(S)));
                 break;
+            case ITOL: 
+                z = (mpz_ptr)malloc(sizeof(MP_INT)); 
+                mpz_init_set_si(z, (long)pop(S)); 
+                push(S, (void * )z); 
+                break; 
+            case LADD:
+                y = (mpz_ptr)(S->_table[--(S->_sp)]); x = (mpz_ptr)(S->_table[(S->_sp)-1]); 
+                mpz_add(x,x,y);
+                break; 
             case SUB:
                 push(S, (void * )( - (long)pop(S) + (long)pop(S)));
                 break;
+            case LSUB:
+                y = (mpz_ptr)(S->_table[--(S->_sp)]); x = (mpz_ptr)(S->_table[(S->_sp)-1]); 
+                mpz_sub(x,x,y);
+                break; 
             case DEC:
                  // push(S, (void * )((long)(pop(S)) -1)) ;
                 S->_table[S ->_sp - 1] = (void * )((long)(S ->_table[S -> _sp - 1]) - 1); 
@@ -88,16 +101,14 @@ void * eval(Vector * S, Vector * E, Vector * C, Vector * R, Vector * EE, Hash * 
             case MUL:
                 push(S, (void * )((long)pop(S) * (long)pop(S)));
                 break;
+            case LMUL:
+                y = (mpz_ptr)(S->_table[--(S->_sp)]); x = (mpz_ptr)(S->_table[(S->_sp)-1]); 
+                mpz_mul(x, x, y);
+                break; 
             case DIV:
                 p = (long)pop(S); 
                 push(S, (void * )((long)pop(S) / p));
                 break;
-            /* 
-            case LADD:
-                mpz_add(mpr, (mpz_t * )pop(S), (mpz_t * )pop(S)); 
-                push(S, (void * )mpr);
-                break;
-            */  
             case EQ:
                 push(S, (void * )(long)((long)pop(S) == (long)pop(S)));
                 break;  
@@ -110,7 +121,7 @@ void * eval(Vector * S, Vector * E, Vector * C, Vector * R, Vector * EE, Hash * 
                 if (strcmp((char * )vector_ref(fn, 0), "CL") != 0 ) printf("not CL\n");
                 l = vector_init(n);  
                  // for(i = 0; i<n; i ++ ) {
-                 //     push(l, pop(S)); 
+                 //     push(l, pop(S));
                  // }
                 memcpy(l ->_table, (S ->_table) +(S ->_sp - n) , n * (sizeof(void * )) ); 
                 l ->_sp = n; S ->_sp = S ->_sp - n;  // vector_print(l);  
@@ -234,6 +245,8 @@ void * eval(Vector * S, Vector * E, Vector * C, Vector * R, Vector * EE, Hash * 
             case DROP:
                 pop(S); 
                 break;
+            case LPR:
+                gmp_printf("%Zd\n", (mpz_ptr)(S->_table[(S->_sp) -1]));
             default:
                 printf("Unknown Command: %ld", inst);  
         }

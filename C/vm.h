@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <gc.h>
-// #include <gmp.h>
+#include <gmp.h>
 
 #define malloc(size) GC_malloc(size)
 #define realloc(p, size) GC_realloc(p, size)
@@ -80,3 +80,6 @@ int  hash(char *key, int size);                 // 内部関数SH
 int  Hash_put(Hash * h, char *key, void *val);
 void  ** Hash_get(Hash * h, char *key);
 void  * eval(Vector * S, Vector * E, Vector * C, Vector * R, Vector * EE, Hash * G); 
+mpz_ptr new_long();
+mpz_ptr new_long_valued(long val);
+mpz_ptr new_long_str(char* s);

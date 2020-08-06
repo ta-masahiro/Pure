@@ -5,18 +5,18 @@
 typedef struct Object {
     long _obj_type; 
     union {
-        long _int_val; 
-        double _real_val; 
-        mpz_t *  _longint_val; 
-        mpq_t  * _longrat_val;
+        long     _int_val; 
+        double   _real_val; 
+        mpz_ptr  _longint_val; 
+        mpq_ptr  _longrat_val;
     } _data; 
 } Object;
 
 Object * new_longint(char * s) {
-    mpz_t val; 
-    mpz_init_set_str(val, s, 10); 
-    Object * p = (object * )malloc(sizeof(Object)); 
-    P->_obj_type = LONG_INT; 
+    MP_INT val; 
+    mpz_init_set_str(&val, s, 10); 
+    Object * p = (Object * )malloc(sizeof(Object)); 
+    p->_obj_type = LONG_INT; 
     P->_data._longint_val = &val; 
 }
 

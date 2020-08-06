@@ -51,6 +51,22 @@ int strcmp_ignorecase(const char *s1, const char *s2) {
 }
 #define strcmp strcmp_ignorecase
 
+mpz_ptr new_long() {
+    mpz_ptr long_int_p = (mpz_ptr)malloc(sizeof(MP_INT)); 
+    mpz_init(long_int_p);
+    return long_int_p;
+}
+
+mpz_ptr new_long_valued(long val) {
+    mpz_ptr long_int_p = (mpz_ptr)malloc(sizeof(MP_INT)); 
+    mpz_init_set_si(long_int_p,val);
+    return long_int_p;
+}
+mpz_ptr new_long_str(char* s) {
+    mpz_ptr long_int_p = (mpz_ptr)malloc(sizeof(MP_INT)); 
+    mpz_init_set_str(long_int_p,s,10);
+    return long_int_p;
+}
  /* 
 void * read(Vector * code, char * file_name) {
     FILE * fp;
@@ -129,17 +145,17 @@ Vector *  get_code(Stream * s) {
 
 enum CODE {STOP, LDC, LD, ADD, CALL, RTN, SEL, JOIN, LDF, SET, LEQ, LDG, GSET, SUB, \
            DEC, TCALL, TSEL, POP, EQ, INC, MUL, DIV, VEC, LDV, VSET, HASH, LDH, HSET, \
-           VPUSH, VPOP};
+           VPUSH, VPOP,LADD,LSUB,LMUL,ITOL,LPR};
  //        0     1    2   3    4     5    6    7     8    9    10   11   12    13   \
  //        14   15     16    17   18  19   20   21   22   23   24    25    26   27
 
 char code_name[][6] = {"STOP","LDC","LD","ADD","CALL","RTN","SEL","JOIN","LDF","SET","LEQ","LDG","GSET","SUB",\
                   "DEC","TCALL","TSEL","POP","EQ","INC","MUL","DIV","VEC","LDV","VSET","HASH","LDH","HSET",\
-                  "VPUSH","VPOP"};
+                  "VPUSH","VPOP","LADD","LSUB","LMUL","ITOL","LPR"};
 
 int code_pr_size[] = {0, 1, 1, 0, 1, 0, 2, 0, 1, 1, 0, 1, 1, 0,\
                   0, 1, 2, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0,\
-                  0, 0};
+                  0, 0,0,0,0,0,0};
 
 void code_optimize(Vector * code, Hash *G){
     char * key;
@@ -181,6 +197,8 @@ Vector * chg_byte_code(Vector * code, Hash * G) {
              // push(t, dequeue(code)); 
         } else if (strcmp((char * )c, "ADD") == 0) {
             push(t, (void * )ADD); 
+        } else if (strcmp((char * )c, "LADD") == 0) {
+            push(t, (void * )LADD); 
         } else if (strcmp((char * )c, "CALL") == 0) {
             push(t, (void * )CALL); 
             push(t, dequeue(code)); 
@@ -225,6 +243,8 @@ Vector * chg_byte_code(Vector * code, Hash * G) {
             push(t, dequeue(code)); 
         } else if (strcmp((char * )c, "SUB") == 0) {
             push(t, (void * )SUB); 
+        } else if (strcmp((char * )c, "LSUB") == 0) {
+            push(t, (void * )LSUB); 
         } else if (strcmp((char * )c, "DEC") == 0) {
             push(t, (void * )DEC); 
         } else if (strcmp((char * )c, "INC") == 0) {
@@ -233,6 +253,8 @@ Vector * chg_byte_code(Vector * code, Hash * G) {
             push(t, (void * )POP); 
         } else if (strcmp((char * )c, "MUL") == 0) {
             push(t, (void * )MUL); 
+        } else if (strcmp((char * )c, "LMUL") == 0) {
+            push(t, (void * )LMUL); 
         } else if (strcmp((char * )c, "DIV") == 0) {
             push(t, (void * )DIV); 
         } else if (strcmp((char * )c, "VEC") == 0) {
@@ -252,6 +274,10 @@ Vector * chg_byte_code(Vector * code, Hash * G) {
             push(t, (void * )VPUSH); 
         } else if (strcmp((char * )c, "VPOP") == 0) {
             push(t, (void * )VPOP); 
+        } else if (strcmp((char * )c, "ITOL") == 0) {
+            push(t, (void * )ITOL); 
+        } else if (strcmp((char * )c, "LPR") == 0) {
+            push(t, (void * )LPR); 
         } else {
             printf("Unknkown Command %s\n", (char * )c); 
             break; 
@@ -285,6 +311,9 @@ void disassy(Vector * code, int indent) {
                 break; 
             case ADD:
                 printf("ADD\n");
+                break;
+            case LADD:
+                printf("LADD\n");
                 break;  
             case CALL:
                 printf("CALL\t%ld\n", (long)dequeue(code));
@@ -332,6 +361,9 @@ void disassy(Vector * code, int indent) {
                 break;  
             case SUB:
                 printf("SUB\n");
+                break;
+            case LSUB:
+                printf("LSUB\n");
                 break; 
             case DEC:
                 printf("DEC\n");
@@ -344,6 +376,9 @@ void disassy(Vector * code, int indent) {
                 break;  
             case MUL:
                 printf("MUL\n");
+                break;
+            case LMUL:
+                printf("LMUL\n");
                 break;  
             case DIV:
                 printf("DIV\n");
@@ -371,7 +406,13 @@ void disassy(Vector * code, int indent) {
                 break;  
             case VPOP:
                 printf("VPOP\n");
-                break;  
+                break; 
+            case ITOL:
+                printf("ITOL\n");
+                break; 
+            case LPR:
+                printf("LPR\n");
+                break ;
             default:
                 printf("Unknkown Command %s\n", (char * )c); 
                 break; 
