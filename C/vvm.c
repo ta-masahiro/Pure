@@ -16,18 +16,21 @@
 #include "hash.c"
 */
 #include "vm.h"
+typedef void*(*Funcpointer)(Vector*);
 enum CODE {STOP, LDC,   LD,   ADD,  CALL, RTN, SEL, JOIN, LDF, SET, LEQ,  LDG,  GSET, SUB, \
            DEC,  TCALL, TSEL, DROP, EQ,   INC, MUL, DIV,  VEC, LDV, VSET, HASH, LDH,  HSET, \
-           VPUSH, VPOP, LADD, LSUB, LMUL, ITOL, LPR};
+           VPUSH, VPOP, LADD, LSUB, LMUL, ITOL,LPR, PCALL,LDM};
  //        0     1      2     3     4     5    6    7     8    9    10    11    12    13   \
  //        14    15     16    17    18    19   20   21    22   23   24    25    26    27
- //        28    29     30    31    32    33
+ //        28    29     30    31    32    33   34   35    36
 void * eval(Vector * S, Vector * E, Vector * C, Vector * R, Vector * EE, Hash * G) {
     char * key; 
     long inst, ff, i, j, n, p; 
     Vector * fn, * keys, * t_exp, * f_exp, * code, * args, * cl, * ref, * Es, * l; 
-    void ** g, * v; 
-    void * ( * func);
+    void ** g, * v;
+    Funcpointer func; 
+    //void * ( * func)(Vector * );//ベクタを引数とすし(void*)を戻り値とする関数のポインタ
+    //void * func;
     Hash * h;  
     mpz_ptr  x, y, z; 
     while (TRUE) {
@@ -56,6 +59,9 @@ void * eval(Vector * S, Vector * E, Vector * C, Vector * R, Vector * EE, Hash * 
                 if ((g = Hash_get(G, key)) == NULL) printf("Unknown Key: %s\n", key); 
                 else push(S, (void * )( * g)); 
                 break;
+            case LDM:
+                 i = * (long * )pop(S); push(S, (void * )i);  
+                break; 
             case SET:
                 v = vector_ref(S, S ->_sp - 1); 
                 // v = pop(S); push(S, v); 
@@ -147,18 +153,17 @@ void * eval(Vector * S, Vector * E, Vector * C, Vector * R, Vector * EE, Hash * 
                  // E = (Vector * )vector_ref(fn, 2); push(E,l); 
                 C = vector_copy1((Vector * )vector_ref(fn, 1)); 
                 break;
-           /*   case PCALL:
+           case PCALL:
                 n = (long)dequeue(C); 
-                fnc = pop(S);
+                func = (Funcpointer)pop(S);
                 l = vector_init(n);  
                  // for(i = 0; i<n; i ++ ) {
                  //     push(l, pop(S)); 
                  // }
-                memcpy(l ->_table, (S ->_table) +(S ->_sp - n) , n * (sizeof(void * )) ); 
-                l ->_sp = n; S ->_sp = S ->_sp - n;  // vector_print(l);  
-                ( * func)()
+                memcpy(l->_table, (S->_table) + (S->_sp - n) , n * (sizeof(void * ))); 
+                l->_sp = n; S->_sp = S->_sp - n;  // vector_print(l);  
+                push(S, func(l));
                 break;
-            */   
             case RTN:
                 E = (Vector * )pop(EE);
                 C = (Vector * )pop(R); 

@@ -21,6 +21,8 @@ typedef struct Vector {
     int     _sp;
 } Vector;
 
+typedef void*(*Funcpointer)(Vector*);
+
 Vector *  vector_init( int maxN);
 #define enqueue push
 Vector * vector_copy1(Vector * v);
