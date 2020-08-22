@@ -1,0 +1,61 @@
+[
+    LDF
+    [
+        LD  [0 0]
+        LD  [0 1]
+        LD  [0 2]
+        LDF
+        [
+;             LD [1 0]
+;             INC
+;             SET [1 0]
+;             POP
+            LD [0 0]
+            LD [0 1]
+            LEQ
+            TSEL
+            [
+                LD [0 2]
+                RTN
+            ]
+            [
+                LD [0 0]
+                ; LDC 1
+                ; SUB
+                DEC
+                LD  [0 1]
+                LD  [0 2]
+                LD  [1 1]
+                CALL 3
+                LD [0 1]
+                ; LDC 1
+                ; SUB
+                DEC 
+                LD  [0 2]
+                LD  [0 0]
+                LD  [1 1]
+                CALL 3
+                LD  [0 2]
+                ; LDC 1
+                ; SUB
+                DEC
+                LD  [0 0]
+                LD  [0 1]
+                LD  [1 1]
+                CALL 3
+                LD  [1 1]
+                TCALL 3
+                RTN
+            ]
+            STOP
+        ]
+        SET [0 1]
+        CALL 3
+        RTN
+    ]
+    GSET tak
+    STOP
+]
+
+[LDC 19 LDC 8 LDC 0 LDG tak CALL 3 STOP]
+
