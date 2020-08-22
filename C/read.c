@@ -196,7 +196,7 @@ int is_float(Stream s, double ret) {
 Vector *  get_code(Stream * s) {
      // printf("in get_code \n"); 
     char c, cc; 
-    Vector * code = vector_init(10); 
+    Vector * code = vector_init(64); 
     char str_buff[255]; int str_buff_p = 0; 
 
     while (TRUE) {
@@ -282,7 +282,7 @@ void code_optimize(Vector * code, Hash *G){
 
 Vector * chg_byte_code(Vector * code, Hash * G) {
     void * c, * operand, ** v; 
-    Vector * t = vector_init(3);
+    Vector * t = vector_init(64);
  
     while (TRUE) {
          // vector_print(code);

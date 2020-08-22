@@ -1,4 +1,4 @@
-[LDC 0 GSET count]
+[LDC 0 GSET count stop]
 
 [
     LDF
@@ -47,7 +47,8 @@
         STOP
     ]
     GSET T
+    STOP
 ]
 
-[LDC 19 LDC 8 LDC 0 LDG T CALL 3 STOP]
+[LDC 19 LDC 9 LDC 0 LDG T CALL 3 STOP]
 [LDG count STOP]
