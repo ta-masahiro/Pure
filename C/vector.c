@@ -32,7 +32,8 @@ Vector * vector_copy1(Vector * v) {
  
 Vector * vector_copy0(Vector * v) {
     Vector * r = vector_init(v ->_size );
-    memcpy(r ->_table, v ->_table, (v->_size)*sizeof(void*));
+    //memcpy(r ->_table, v ->_table, (v->_size)*sizeof(void*));
+    memcpy(r ->_table, v ->_table, (v->_sp)*sizeof(void*));
     r->_sp = v->_sp;r ->_cp = v ->_cp; 
     return r;
 }

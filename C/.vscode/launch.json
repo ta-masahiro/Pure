@@ -5,11 +5,11 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "(gdb) 起動",
+           "name": "(gdb) 起動",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/vm-test",
-            "args": ["sample.secd"],
+            "args": ["test.secd"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],

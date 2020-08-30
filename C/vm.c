@@ -1,16 +1,19 @@
 #include "vm.h"
 typedef void*(*Funcpointer)(Vector*);
 
-enum CODE {STOP, LDC,   LD,   ADD,  CALL, RTN, SEL, JOIN, LDF, SET, LEQ,  LDG,  GSET, SUB,  \
-           DEC,  TCALL, TSEL, DROP, EQ,   INC, MUL, DIV,  VEC, LDV, VSET, HASH, LDH,  HSET, \
-           VPUSH,VPOP,  LADD, LSUB, LMUL, ITOL,LPR, PCALL,LDM};
- //        0     1      2     3     4     5    6    7     8    9    10    11    12    13 
- //        14    15     16    17    18    19   20   21    22   23   24    25    26    27
- //        28    29     30    31    32    33   34   35    36
+enum CODE {STOP,  LDC,  LD,   ADD,  CALL, RTN, SEL, JOIN, LDF, SET, LEQ,  LDG,  GSET, SUB,  \
+           DEC,   TCALL,TSEL, DROP, EQ,   INC, MUL, DIV,  VEC, LDV, VSET, HASH, LDH,  HSET, \
+           VPUSH, VPOP, LADD, LSUB, LMUL, ITOL,LPR, PCALL,LDM, DUP, SWAP, ROT, _2ROT, CALLS,\
+           TCALLS,RTNS, LDP,  LDL };
+ //        0      1      2     3     4     5    6    7     8    9    10    11    12    13 
+ //        14     15     16    17    18    19   20   21    22   23   24    25    26    27
+ //        28     29     30    31    32    33   34   35    36   37   38    39    40    41
+ //        42     43     44    45
 int op_size[] = \
           {0,    1,     1,    0,    1,    0,   2,   0,    1,   1,   0,    1,    1,    0,    \
            0,    1,     2,    0,    0,    0,   0,   0,    1,   0,   0,    0,    0,    0,    \
-           0,    0,     0,    0,    0,    0,   0,   1,    0} ;
+           0,    0,     0,    0,    0,    0,   0,   1,    0,   0,   0,    0,    0,    1,    \
+           1,    0,     1,    1 } ;
 
 Vector *tosqs(Vector*code, const void** table) {
     enum CODE op;
@@ -18,7 +21,7 @@ Vector *tosqs(Vector*code, const void** table) {
     while (code->_cp < code->_sp) {
         op=(enum CODE)dequeue(code); //printf("%d ",op);
         vector_set(C, (C->_cp)++, (void*)table[op]); //printf("%ld\n",(long)table[op]);
-        if (op == LDF) {
+        if (op == LDF || op== LDP ) {
             vector_set(C,(C->_cp)++,(void*)tosqs(dequeue(code),table));
         } else if (op == SEL || op == TSEL) {
             vector_set(C,(C->_cp)++,(void*)tosqs(dequeue(code),table));
@@ -35,19 +38,20 @@ Vector *tosqs(Vector*code, const void** table) {
 
 void * eval(Vector * S, Vector * E, Vector * Code, Vector * R, Vector * EE, Hash * G) {
     char * key; 
-    long inst, ff, i, j, n, p; 
+    long inst, ff, i, j, n, p, SSP=S->_sp; 
     Vector * fn, * keys, * t_exp, * f_exp, * code, * args, * cl, * ref, * Es, * l; 
     void ** g, * v;
     Funcpointer func; 
     Hash * h;  
     mpz_ptr x, y, z;
     enum CODE op;
-    Vector *C = vector_copy0(Code);
+    Vector *C = vector_copy0(Code),*ssp=vector_init(200);
 
     static const void * table[] = {
-        &&_STOP, &&_LDC, &&_LD, &&_ADD, &&_CALL, &&_RTN, &&_SEL, &&_JOIN, &&_LDF, &&_SET, &&_LEQ, &&_LDG, &&_GSET, &&_SUB, \
-        &&_DEC,  &&_TCALL, &&_TSEL, &&_DROP, &&_EQ, &&_INC, &&_MUL, &&_DIV, &&_VEC, &&_LDV, &&_VSET, &&_HASH, &&_LDH, &&_HSET, \
-        &&_VPUSH, &&_VPOP, &&_LADD, &&_LSUB, &&_LMUL, &&_ITOL,&&_LPR, &&_PCALL, &&_LDM};
+        &&_STOP,  &&_LDC,  &&_LD,  &&_ADD, &&_CALL,&&_RTN, &&_SEL,&&_JOIN, &&_LDF,&&_SET,&&_LEQ, &&_LDG, &&_GSET,&&_SUB,  \
+        &&_DEC,   &&_TCALL,&&_TSEL,&&_DROP,&&_EQ,  &&_INC, &&_MUL,&&_DIV,  &&_VEC,&&_LDV,&&_VSET,&&_HASH,&&_LDH, &&_HSET, \
+        &&_VPUSH, &&_VPOP, &&_LADD,&&_LSUB,&&_LMUL,&&_ITOL,&&_LPR,&&_PCALL,&&_LDM,&&_DUP,&&_SWAP,&&_ROT, &&_2ROT,&&_CALLS,\
+        &&_TCALLS,&&_RTNS, &&_LDP, &&_LDL };
 
     C = tosqs(Code,table);//vector_print(C);
 
@@ -156,7 +160,7 @@ void * eval(Vector * S, Vector * E, Vector * Code, Vector * R, Vector * EE, Hash
     _CALL:
         n = (long)dequeue(C); 
         fn = (Vector * )pop(S);
-        if (strcmp((char * )vector_ref(fn, 0), "CL") != 0 ) printf("not CL\n");
+        //if (strcmp((char * )vector_ref(fn, 0), "CL") != 0 ) printf("not CL\n");
         l = vector_init(n);  
         memcpy(l ->_table, (S ->_table) +(S ->_sp - n) , n * (sizeof(void * )) ); 
         l ->_sp = n; S ->_sp = S ->_sp - n;  // vector_print(l);  
@@ -170,7 +174,7 @@ void * eval(Vector * S, Vector * E, Vector * Code, Vector * R, Vector * EE, Hash
     _TCALL:
         n = (long)dequeue(C); 
         fn = (Vector * )pop(S);
-        if (strcmp((char * )vector_ref(fn, 0), "CL") != 0 ) printf("not CL\n");
+        //if (strcmp((char * )vector_ref(fn, 0), "CL") != 0 ) printf("not CL\n");
         l = vector_init(n);  
         memcpy(l ->_table, (S ->_table) +(S ->_sp - n) , n * (sizeof(void * )) ); 
         l ->_sp = n; S ->_sp = S ->_sp - n;  // vector_print(l);  
@@ -280,7 +284,61 @@ void * eval(Vector * S, Vector * E, Vector * Code, Vector * R, Vector * EE, Hash
     _LPR:
         gmp_printf("%Zd\n", (mpz_ptr)(S->_table[(S->_sp) -1]));
         goto * dequeue(C);
-        //goto * table[(int)dequeue(C)];                 
+        //goto * table[(int)dequeue(C)];
+    _DUP:
+        push(S, S->_table[S->_sp - 1 ]); 
+        goto * dequeue(C); 
+    _SWAP:
+        v = S->_table[S->_sp - 1]; 
+        S->_table[S->_sp - 1] = S->_table[S->_sp - 2]; 
+        S->_table[S->_sp - 2] = v;   
+        goto * dequeue(C); 
+    _ROT:
+        v = S->_table[S->_sp - 1]; 
+        S->_table[S->_sp - 1] = S->_table[S->_sp - 2]; 
+        S->_table[S->_sp - 2] = S->_table[S->_sp - 3]; 
+        S->_table[S->_sp - 3] = v;   
+        goto * dequeue(C); 
+    _2ROT:        
+        v = S->_table[S->_sp - 2]; 
+        S->_table[S->_sp -2] = S->_table[S->_sp - 3]; 
+        S->_table[S->_sp - 3] = S->_table[S->_sp - 4]; 
+        S->_table[S->_sp - 4] = v;   
+        goto * dequeue(C); 
+    _CALLS: // small call Eレジスタを使用せず、スタックのみをローカル変数として用いる
+        n = (long)dequeue(C);
+        push(R, (void * )C);
+        C = vector_copy1((Vector * )pop(S)); 
+        push(ssp,(void*)SSP);
+        push(ssp,(void*)(long)S->_sp-n);
+        SSP = S->_sp;//for(i=SSP-n;i<SSP;i++) printf(" %ld",(long)S->_table[i]);printf(":S%ld\n",SSP);vector_print(S);
+        goto * dequeue(C);
+    _TCALLS:// tail small call
+        n=(long)dequeue(C);
+         // push(R, (void * )C); 
+        C = vector_copy1((Vector * )pop(S)); 
+        //push(ssp,(void*)SSP);
+        //push(ssp,(void*)(long)S->_sp-n);
+        SSP=S->_sp;//for(i=SSP-n;i<SSP;i++) printf(" %ld",(long)S->_table[i]);printf(":TS%ld\n",SSP);vector_print(S);
+        goto * dequeue(C);
+    _RTNS: //small call用のRTN
+        //E = (Vector * )pop(EE);
+        C = (Vector * )pop(R);
+        v = S->_table[S->_sp-1];//printf("RTNS:%ld %ld", (long)S->_table[S->_sp-1],SSP);
+        S->_sp=(long)pop(ssp);
+        SSP=(long)pop(ssp);//printf("->%ld\n",SSP);
+        //S->_table[SSP]=v;
+        //S->_sp=SSP+1;
+        push(S,v);
+        //vector_print(S);
+        goto * dequeue(C);
+    _LDP://small call用の関数をロードする
+        push(S, dequeue(C)); 
+        goto * dequeue(C);
+    _LDL://small call 内のローカル変数ロード
+        n=(long)dequeue(C);
+        push(S, S->_table[SSP-n-1]);//nがマイナスの場合の庶路追加要！
+        goto * dequeue(C);
 }
 
 Vector * vector_make(void * L[], int N) {

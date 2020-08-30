@@ -14,7 +14,7 @@ Stream  * new_stream(FILE  * f) {
     S ->_pos = 0;
     S ->_buff = (char * )malloc(MAXBUFF * sizeof(char));  
     p = fgets(S ->_buff, MAXBUFF, f); 
-    S ->_fp = f;
+    S -> _fp = f;
     if (p == NULL) return NULL;  
     return S; 
 }
@@ -244,19 +244,25 @@ Vector *  get_code(Stream * s) {
     return code; 
 }
 
-enum CODE {STOP, LDC, LD, ADD, CALL, RTN, SEL, JOIN, LDF, SET, LEQ, LDG, GSET, SUB, \
-           DEC, TCALL, TSEL, POP, EQ, INC, MUL, DIV, VEC, LDV, VSET, HASH, LDH, HSET, \
-           VPUSH, VPOP,LADD,LSUB,LMUL,ITOL,LPR,PCALL, LDM};
- //        0     1    2   3    4     5    6    7     8    9    10   11   12    13   \
- //        14   15     16    17   18  19   20   21   22   23   24    25    26   27
+enum CODE {STOP,  LDC,  LD,  ADD, CALL,RTN, SEL, JOIN, LDF, SET, LEQ,  LDG, GSET,SUB,   \
+           DEC,   TCALL,TSEL,DROP,EQ,  INC, MUL, DIV,  VEC, LDV, VSET, HASH,LDH, HSET,  \
+           VPUSH, VPOP, LADD,LSUB,LMUL,ITOL,LPR, PCALL,LDM, DUP, SWAP, ROT, _2ROT,CALLS,\
+           TCALLS,RTNS, LDP, LDL };
+ //        0      1     2    3    4    5    6    7     8    9    10    11   12   13   
+ //        14     15    16   17   18   19   20   21    22   23   24    25   26   27
+ //        28     29    30   31   32   33   34   35    36   37   38    39   40   41
+ //        42     43    44   45
 
-char code_name[][6] = {"STOP","LDC","LD","ADD","CALL","RTN","SEL","JOIN","LDF","SET","LEQ","LDG","GSET","SUB",\
-                  "DEC","TCALL","TSEL","POP","EQ","INC","MUL","DIV","VEC","LDV","VSET","HASH","LDH","HSET",\
-                  "VPUSH","VPOP","LADD","LSUB","LMUL","ITOL","LPR","PCALL", "LDM"};
+char code_name[][6] = \
+    {"STOP",  "LDC",  "LD",  "ADD", "CALL","RTN", "SEL","JOIN","LDF","SET","LEQ",  "LDG", "GSET","SUB",   \
+     "DEC",   "TCALL","TSEL","DPOP","EQ",  "INC", "MUL","DIV", "VEC","LDV","VSET", "HASH","LDH", "HSET",  \
+     "VPUSH", "VPOP", "LADD","LSUB","LMUL","ITOL","LPR","PCALL","LDM","DUP","SWAP","ROT","_2ROT","CALLS", \
+     "TCALLS","RTNS", "LDP", "LDL" };
 
-int code_pr_size[] = {0, 1, 1, 0, 1, 0, 2, 0, 1, 1, 0, 1, 1, 0,\
-                  0, 1, 2, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0,\
-                  0, 0,0,0,0,0,0,1, 0} ;
+int code_pr_size[] = {0, 1, 1, 0, 1, 0, 2, 0, 1, 1, 0, 1, 1, 0, \
+                      0, 1, 2, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, \
+                      0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, \
+                      1, 0, 1, 1} ;
 
 void code_optimize(Vector * code, Hash *G){
     char * key;
@@ -355,8 +361,8 @@ Vector * chg_byte_code(Vector * code, Hash * G) {
             push(t, (void * )DEC); 
         } else if (strcmp((char * )c, "INC") == 0) {
             push(t, (void * )INC); 
-        } else if (strcmp((char * )c, "POP") == 0) {
-            push(t, (void * )POP); 
+        } else if (strcmp((char * )c, "DROP") == 0) {
+            push(t, (void * )DROP); 
         } else if (strcmp((char * )c, "MUL") == 0) {
             push(t, (void * )MUL); 
         } else if (strcmp((char * )c, "LMUL") == 0) {
@@ -384,6 +390,28 @@ Vector * chg_byte_code(Vector * code, Hash * G) {
             push(t, (void * )ITOL); 
         } else if (strcmp((char * )c, "LPR") == 0) {
             push(t, (void * )LPR); 
+        } else if (strcmp((char * )c, "DUP") == 0) {
+            push(t, (void * )DUP); 
+        } else if (strcmp((char * )c, "SWAP") == 0) {
+            push(t, (void * )SWAP); 
+        } else if (strcmp((char * )c, "ROT") == 0) {
+            push(t, (void * )ROT); 
+        } else if (strcmp((char * )c, "_2ROT") == 0) {
+            push(t, (void * )_2ROT); 
+        } else if (strcmp((char * )c, "CALLS") == 0) {
+            push(t, (void * )CALLS); 
+            push(t, dequeue(code)); 
+        } else if (strcmp((char * )c, "TCALLS") == 0) {
+            push(t, (void * )TCALLS); 
+            push(t, dequeue(code)); 
+        } else if (strcmp((char * )c, "RTNS") == 0) {
+            push(t, (void * )RTNS); 
+        } else if (strcmp((char * )c, "LDP") == 0) {
+            push(t, (void * )LDP); 
+            push(t, chg_byte_code ((Vector * ) dequeue(code), G)); 
+        } else if (strcmp((char * )c, "LDL") == 0) {
+            push(t, (void * )LDL); 
+            push(t, dequeue(code)); 
         } else {
             printf("Unknkown Command %s\n", (char * )c); 
             break; 
@@ -483,8 +511,8 @@ void disassy(Vector * code, int indent) {
             case INC:
                 printf("INC\n");
                 break;  
-            case POP:
-                printf("POP\n");
+            case DROP:
+                printf("DROP\n");
                 break;  
             case MUL:
                 printf("MUL\n");
@@ -525,6 +553,34 @@ void disassy(Vector * code, int indent) {
             case LPR:
                 printf("LPR\n");
                 break ;
+            case DUP:
+                printf("DUP\n");
+                break ;
+            case SWAP:
+                printf("SWAP\n");
+                break ;
+            case ROT:
+                printf("ROT\n");
+                break ;
+            case _2ROT:
+                printf("_2ROT\n");
+                break ;
+            case CALLS:
+                printf("CALLS\t%ld\n", (long)dequeue(code));
+                break ;
+            case TCALLS:
+                printf("TCALLS\t%ld\n", (long)dequeue(code));
+                break ;
+            case RTNS:
+                printf("RTNS\n");
+                break ;
+            case LDP:
+                printf("LDP\n"); 
+                disassy((Vector *)dequeue(code), indent ); 
+                break; 
+            case LDL:
+                printf("LDL\t%ld\n", (long)dequeue(code));
+                break ;
             default:
                 printf("Unknkown Command %s\n", (char * )c); 
                 break; 
@@ -552,23 +608,30 @@ void*list(Vector*v) {
 void*iprint(Vector*v) {
     for(long i=0;i<(long)(v->_sp);i++) printf("%ld ",(long)(v->_table[i]));
     printf("\n");
+    return (void*)v;
 }
 void*vprint(Vector*v) {
     Vector*vv=(Vector*)(v->_table[0]);
     printf("[ "); 
     for(long i=0;i<(long)(vv->_sp);i++) printf("%ld ",(long)(vv->_table[i]));
-    printf("]\n"); 
+    printf("]\n");
+    return (void*)v;
 }
-
+ /* void * hash_delete(Vector * v){
+    Hash * h = (Hash * )v[0]; 
+    Symbol * s = (Symbol * )v[1]; 
+    Hash_delete(h, s); 
+    return NULL; 
+} */ 
  
 int main(int argc, char * argv[]) {
     char c; 
     Vector  * code,  * t; 
-    Vector * S = vector_init(50); 
+    Vector * S = vector_init(500); 
     Vector * E = vector_init(5); 
     Vector * C, * CC ; 
-    Vector * R = vector_init(50); 
-    Vector * EE = vector_init(5); 
+    Vector * R = vector_init(500); 
+    Vector * EE = vector_init(50); 
     Hash * G = Hash_init(128); // must be 2^n 
     long v; 
     FILE * fp; 
@@ -579,6 +642,7 @@ int main(int argc, char * argv[]) {
     Hash_put(G,"list",(void*)list);
     Hash_put(G,"iprint",(void*)iprint);
     Hash_put(G,"vprint",(void*)vprint);
+     // Hash_put(G, "hash_delete", (void * )hash_delete); 
 
     if (argc <= 1 ) s = new_stream(stdin);
     else {
@@ -594,7 +658,7 @@ int main(int argc, char * argv[]) {
                 C = chg_byte_code(code, G); 
                 vector_print(C);
                 //disassy(C, 0);
-                code_optimize(C,G);
+                //code_optimize(C,G);
                 disassy(C,0);
                 v = (long)eval(S, E, C, R, EE, G);
                 printf("%ld\n", v);    

@@ -1,12 +1,13 @@
 PROGRAM := vm-test
-OBJS := hash.o vector.o read.o vvm.o
+OBJS := hash.o vector.o read.o vm.o
 
 CC := gcc
-CFLAGS := -g -O0
-LDLIBS :=  -lgc
+#FLAGS := -g -O0
+FLAGS := -O3
+LDLIBS :=  -lgc -lgmp
 
 $(PROGRAM): $(OBJS)
-	$(CC) -o $(PROGRAM) $^ $(LDLIBS)
+	$(CC) -o $(PROGRAM) $(FLAGS) $^ $(LDLIBS)
 
 $(OBJS): vm.h
 

@@ -6,7 +6,8 @@
         LDG count
         INC
         GSET count
-        POP
+        ; POP
+        DROP
         LD [0 0]
         LD [0 1]
         LEQ
@@ -50,5 +51,5 @@
     STOP
 ]
 
-[LDC 19 LDC 9 LDC 0 LDG T CALL 3 STOP]
+[LDC 19 LDC 8 LDC 0 LDG T CALL 3 STOP]
 [LDG count STOP]

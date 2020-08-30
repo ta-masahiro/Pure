@@ -43,7 +43,8 @@ int Hash_put(Hash * hashT, char *key, void *val) {
     int n, h = hash(key, hashT ->size);
     for (n = 0; n < hashT ->size; n++) {
         int ix = (h + n) & (hashT->size - 1);
-        if (hashT ->hashTable[ix].key == NULL) {
+         if (hashT ->hashTable[ix].key == NULL) {
+         // if (hashT ->hashTable[ix] == NULL) {
             hashT ->hashTable[ix].key = key;        
             hashT ->hashTable[ix].val = val;        
             hashT ->entries++;
@@ -63,7 +64,8 @@ void  **Hash_get(Hash * hashT, char *key) {
     int n, h = hash(key, hashT ->size);
     for (n = 0; n < hashT ->size; n++) {
         int ix = (h + n) & (hashT ->size - 1);
-        if (hashT ->hashTable[ix].key == NULL) {
+         if (hashT ->hashTable[ix].key == NULL) {
+         // if (hashT ->hashTable[ix] == NULL) {
             return NULL;                // 登録なし
         } else if (strcmp(hashT ->hashTable[ix].key, key) == 0) {
             return &(hashT ->hashTable[ix].val);   // 登録あり
@@ -71,7 +73,24 @@ void  **Hash_get(Hash * hashT, char *key) {
     }
     return NULL;
 }
-
+ /* 
+void Hash_delete(Hash * hashT, char *key) {
+    int n, h = hash(key, hashT ->size);
+    for (n = 0; n < hashT ->size; n++) {
+        int ix = (h + n) & (hashT ->size - 1);
+        if (hashT ->hashTable[ix].key == NULL) {
+         // if (hashT ->hashTable[ix] == NULL) {
+            printf("key not exisit!\n"); 
+            return ;                // 登録なし
+        } else if (strcmp(hashT ->hashTable[ix].key, key) == 0) {
+            hashT ->hashTable[ix].key = NULL;   // 登録あり
+            return; 
+        }
+    }
+    printf("key not exisit!\n"); 
+    return ;
+}
+ */ 
 void print_hashTable(Hash * h) {
     int i; 
     for(i = 0;  i < (h ->size); i ++ ) {
