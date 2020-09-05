@@ -11,6 +11,9 @@ $(PROGRAM): $(OBJS)
 
 $(OBJS): vm.h
 
+.SUFFIXES: .c .o
+.c.o:
+	$(CC) $(FLAGS) -c $<
 clean:
 	$(RM) *.o
 	$(RM) vm-test

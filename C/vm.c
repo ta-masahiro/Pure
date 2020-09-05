@@ -37,7 +37,7 @@ Vector *tosqs(Vector*code, const void** table) {
 
 
 void * eval(Vector * S, Vector * E, Vector * Code, Vector * R, Vector * EE, Hash * G) {
-    char * key; 
+    Symbol * sym;  
     long inst, ff, i, j, n, p, SSP=S->_sp; 
     Vector * fn, * keys, * t_exp, * f_exp, * code, * args, * cl, * ref, * Es, * l; 
     void ** g, * v;
@@ -79,8 +79,8 @@ void * eval(Vector * S, Vector * E, Vector * Code, Vector * R, Vector * EE, Hash
         goto * dequeue(C);
         //goto  * table[(int)dequeue(C)];                 
     _LDG:
-        key = (char * )dequeue(C);
-        if ((g = Hash_get(G, key)) == NULL) printf("Unknown Key: %s\n", key); 
+        sym = (Symbol *)dequeue(C);
+        if ((g = Hash_get(G, sym)) == NULL) printf("Unknown Key: %s\n", sym -> _table); 
         else push(S, (void * )( * g)); 
         goto * dequeue(C);
         //goto * table[(int)dequeue(C)];                 
@@ -99,8 +99,8 @@ void * eval(Vector * S, Vector * E, Vector * Code, Vector * R, Vector * EE, Hash
         //goto * table[(int)dequeue(C)];                 
     _GSET:
         v = vector_ref(S, S ->_sp - 1); 
-        key = (char * )dequeue(C);
-        Hash_put(G, key, v);  
+        sym = (Symbol *)dequeue(C);
+        Hash_put(G, sym, v);  
         goto * dequeue(C);
         //goto * table[(int)dequeue(C)];                 
     _ADD:
@@ -129,6 +129,7 @@ void * eval(Vector * S, Vector * E, Vector * Code, Vector * R, Vector * EE, Hash
         //goto * table[(int)dequeue(C)];                 
     _DEC:
         S->_table[S ->_sp - 1] = (void * )((long)(S ->_table[S -> _sp - 1]) - 1); 
+        // (long)(S->_table[S ->_sp - 1]) ++ ; 
         goto * dequeue(C);
         //goto * table[(int)dequeue(C)];                 
     _INC:  
@@ -252,17 +253,17 @@ void * eval(Vector * S, Vector * E, Vector * Code, Vector * R, Vector * EE, Hash
         goto * dequeue(C);
         //goto * table[(int)dequeue(C)];                 
     _LDH:
-        key = (char * )pop(S); 
+        sym = (Symbol *)pop(S); 
         h = (Hash * )pop(S);
-        if ((g = Hash_get(h, key)) == NULL) printf("Unknown Key: %s\n", key);  
+        if ((g = Hash_get(h, sym)) == NULL) printf("Unknown Key: %s\n", sym -> _table);  
         else push(S, (void * )( * g)); 
         goto * dequeue(C);
         //goto * table[(int)dequeue(C)];                 
     _HSET:
         v = pop(S); 
-        key = (char * )pop(S); 
+        sym = (Symbol *)pop(S); 
         h = (Hash * )pop(S); 
-        Hash_put(h, key, v); 
+        Hash_put(h, sym, v); 
         push(S, v); 
         goto * dequeue(C);
         //goto * table[(int)dequeue(C)];                 

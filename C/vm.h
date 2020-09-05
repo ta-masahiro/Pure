@@ -64,24 +64,30 @@ inline void vector_set(Vector * v, int index, void ** val) {
 }
 #endif
 
+typedef struct Symbol {
+    unsigned long _size;
+    unsigned char *_table;
+} Symbol;
+
 typedef struct Data {
-    char *key;
-    void *val;
+    Symbol  *key;
+    void    *val;
 } Data;
 
 typedef struct Hash {
     Data *hashTable;
-    // int   type;
-    int   size, entries;        // サイズ、登録数
+    unsigned long initval, size, entries;        // 初期値、サイズ、登録数
 } Hash;
 
-Hash * Hash_init(int size);
-void Hash_resize(Hash * h, int newSize);     // 内部関数
+Hash * Hash_init(unsigned long size);
+void Hash_resize(Hash * h, unsigned long newSize);     // 内部関数
 void Hash_free(Hash *pHash);
-int  hash(char *key, int size);                 // 内部関数SH
-int  Hash_put(Hash * h, char *key, void *val);
-void  ** Hash_get(Hash * h, char *key);
+unsigned long hash(unsigned char *key, unsigned long keysize, unsigned long initval);                 // 内部関数SH
+unsigned long Hash_put(Hash * h, Symbol *key, void *val);
+void  ** Hash_get(Hash * h, Symbol *key);
 void  * eval(Vector * S, Vector * E, Vector * C, Vector * R, Vector * EE, Hash * G); 
+void print_hashTable(Hash* h); 
+Symbol*new_symbol(unsigned char*s, unsigned long i);
 mpz_ptr new_long();
 mpz_ptr new_long_valued(long val);
 mpz_ptr new_long_str(char* s);

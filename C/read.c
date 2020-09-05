@@ -19,11 +19,15 @@ Stream  * new_stream(FILE  * f) {
     return S; 
 }
 
-char * new_symbol(char * str, int size) {
+Symbol * new_symbol(unsigned char * str, unsigned long size) {
     char * s = (char * )malloc(size * sizeof(char) + 1); 
-    strcpy(s, str); // printf("%s\n", s);
-     // if (strcmp(s, "LDC") == 0) printf("!LDC!\n");  
-    return s;  
+    // strcpy(s, str); // printf("%s\n", s);
+    memcpy(s,str,size);
+    // if (strcmp(s, "LDC") == 0) printf("!LDC!\n");  
+    Symbol * sym = (Symbol * )malloc(sizeof(Symbol));
+    sym -> _size = size; 
+    sym -> _table = s;  
+    return sym;  
 }
 char get_char(Stream * S) {
     return S ->_buff[(S ->_pos) ++ ]; 
@@ -266,13 +270,14 @@ int code_pr_size[] = {0, 1, 1, 0, 1, 0, 2, 0, 1, 1, 0, 1, 1, 0, \
 
 void code_optimize(Vector * code, Hash *G){
     char * key;
+    Symbol * sym; 
     void ** v;
     void * c;
     while ((c = dequeue(code)) != NULL) {
         //printf("%ld\t%s\n",(long)c,code_name[(long)c]);
         if ((long)c==LDG) {
-            key = (char *)dequeue(code);
-            if ((v=Hash_get(G, key))==NULL || (long)code->_table[code->_cp] != CALL || (long)code->_table[code->_cp] != TCALL)  continue;
+            sym = (Symbol *)dequeue(code);
+            if ((v=Hash_get(G, sym))==NULL || (long)code->_table[code->_cp] != CALL || (long)code->_table[code->_cp] != TCALL)  continue;
             code->_table[code->_cp - 1] = (void *)( *v);
             code->_table[code->_cp - 2] =(void *)LDC;
         } else if ((long)c==SEL || (long)c==TSEL) {
@@ -289,60 +294,62 @@ void code_optimize(Vector * code, Hash *G){
 Vector * chg_byte_code(Vector * code, Hash * G) {
     void * c, * operand, ** v; 
     Vector * t = vector_init(64);
+    Symbol * sym; 
  
     while (TRUE) {
          // vector_print(code);
-        if ((c = dequeue(code)) == NULL) break;  
-        if (strcmp((char * )c, "STOP") == 0) {
+        if ((sym = (Symbol * )dequeue(code)) == NULL) break;
+        c = sym -> _table;   
+        if (strcmp(c, "STOP") == 0) {
             push(t, (void *) STOP);
-        } else if (strcmp((char * )c, "LDC") == 0) {
+        } else if (strcmp(c, "LDC") == 0) {
             push(t, (void * )LDC);  // printf("%d\n", (int)((void * )1));  
             push(t, dequeue(code)); 
-        } else if (strcmp((char * )c, "LD") == 0) {
+        } else if (strcmp(c, "LD") == 0) {
             push(t, (void * )LD); 
             push(t, dequeue(code)); 
              // push(t, dequeue(code)); 
-        } else if (strcmp((char * )c, "LDM") == 0) {
+        } else if (strcmp(c, "LDM") == 0) {
             push(t, (void * )LDM); 
-        } else if (strcmp((char * )c, "ADD") == 0) {
+        } else if (strcmp(c, "ADD") == 0) {
             push(t, (void * )ADD); 
-        } else if (strcmp((char * )c, "LADD") == 0) {
+        } else if (strcmp(c, "LADD") == 0) {
             push(t, (void * )LADD); 
-        } else if (strcmp((char * )c, "CALL") == 0) {
+        } else if (strcmp(c, "CALL") == 0) {
             push(t, (void * )CALL); 
             push(t, dequeue(code)); 
-        } else if (strcmp((char * )c, "TCALL") == 0) {
+        } else if (strcmp(c, "TCALL") == 0) {
             push(t, (void * )TCALL); 
             push(t, dequeue(code)); 
-        } else if (strcmp((char * )c, "PCALL") == 0) {
+        } else if (strcmp(c, "PCALL") == 0) {
             push(t, (void * )PCALL); 
             push(t, dequeue(code)); 
-        } else if (strcmp((char * )c, "RTN") == 0) {
+        } else if (strcmp(c, "RTN") == 0) {
             push(t, (void * )RTN); 
-        } else if (strcmp((char * )c, "SEL") == 0) {
+        } else if (strcmp(c, "SEL") == 0) {
             push(t, (void * )SEL); 
             push(t, chg_byte_code ((Vector * ) dequeue(code), G)); 
             push(t, chg_byte_code ((Vector * ) dequeue(code), G)); 
-        } else if (strcmp((char * )c, "TSEL") == 0) {
+        } else if (strcmp(c, "TSEL") == 0) {
             push(t, (void * )TSEL); 
             push(t, chg_byte_code ((Vector * ) dequeue(code), G)); 
             push(t, chg_byte_code ((Vector * ) dequeue(code), G)); 
-        } else if (strcmp((char * )c, "JOIN") == 0) {
+        } else if (strcmp(c, "JOIN") == 0) {
             push(t, (void * )JOIN); 
-        } else if (strcmp((char * )c, "LDF") == 0) {
+        } else if (strcmp(c, "LDF") == 0) {
             push(t, (void * )LDF); 
             push(t, chg_byte_code ((Vector * ) dequeue(code), G)); 
              // push(t, chg_byte_code ((Vector * ) dequeue(code))); 
-        } else if (strcmp((char * )c, "SET") == 0) {
+        } else if (strcmp(c, "SET") == 0) {
             push(t, (void * )SET); 
             push(t, dequeue(code)); 
-        } else if (strcmp((char * )c, "LEQ") == 0) {
+        } else if (strcmp(c, "LEQ") == 0) {
             push(t, (void * )LEQ); 
-        } else if (strcmp((char * )c, "EQ") == 0) {
+        } else if (strcmp(c, "EQ") == 0) {
             push(t, (void * )EQ); 
-        } else if (strcmp((char * )c, "LDG") == 0) {
+        } else if (strcmp(c, "LDG") == 0) {
             operand = dequeue(code); 
-            v = Hash_get(G, (char * )operand); 
+             // v = Hash_get(G, (char * )operand); 
              // if (v == NULL) {
                  push(t, (void * )LDG); 
                  push(t, operand);
@@ -350,66 +357,66 @@ Vector * chg_byte_code(Vector * code, Hash * G) {
              //     push(t, (void *) LDC); 
              //     push(t, (void * )( * v)); 
              // } 
-        } else if (strcmp((char * )c, "GSET") == 0) {
+        } else if (strcmp(c, "GSET") == 0) {
             push(t, (void * )GSET); 
             push(t, dequeue(code)); 
-        } else if (strcmp((char * )c, "SUB") == 0) {
+        } else if (strcmp(c, "SUB") == 0) {
             push(t, (void * )SUB); 
-        } else if (strcmp((char * )c, "LSUB") == 0) {
+        } else if (strcmp(c, "LSUB") == 0) {
             push(t, (void * )LSUB); 
-        } else if (strcmp((char * )c, "DEC") == 0) {
+        } else if (strcmp(c, "DEC") == 0) {
             push(t, (void * )DEC); 
-        } else if (strcmp((char * )c, "INC") == 0) {
+        } else if (strcmp(c, "INC") == 0) {
             push(t, (void * )INC); 
-        } else if (strcmp((char * )c, "DROP") == 0) {
+        } else if (strcmp(c, "DROP") == 0) {
             push(t, (void * )DROP); 
-        } else if (strcmp((char * )c, "MUL") == 0) {
+        } else if (strcmp(c, "MUL") == 0) {
             push(t, (void * )MUL); 
-        } else if (strcmp((char * )c, "LMUL") == 0) {
+        } else if (strcmp(c, "LMUL") == 0) {
             push(t, (void * )LMUL); 
-        } else if (strcmp((char * )c, "DIV") == 0) {
+        } else if (strcmp(c, "DIV") == 0) {
             push(t, (void * )DIV); 
-        } else if (strcmp((char * )c, "VEC") == 0) {
+        } else if (strcmp(c, "VEC") == 0) {
             push(t, (void * )VEC); 
             push(t, dequeue(code)); 
-        } else if (strcmp((char * )c, "LDV") == 0) {
+        } else if (strcmp(c, "LDV") == 0) {
             push(t, (void * )LDV); 
-        } else if (strcmp((char * )c, "VSET") == 0) {
+        } else if (strcmp(c, "VSET") == 0) {
             push(t, (void * )VSET); 
-        } else if (strcmp((char * )c, "HASH") == 0) {
+        } else if (strcmp(c, "HASH") == 0) {
             push(t, (void * )HASH); 
-        } else if (strcmp((char * )c, "LDH") == 0) {
+        } else if (strcmp(c, "LDH") == 0) {
             push(t, (void * )LDH); 
-        } else if (strcmp((char * )c, "HSET") == 0) {
+        } else if (strcmp(c, "HSET") == 0) {
             push(t, (void * )HSET); 
-        } else if (strcmp((char * )c, "VPUSH") == 0) {
+        } else if (strcmp(c, "VPUSH") == 0) {
             push(t, (void * )VPUSH); 
-        } else if (strcmp((char * )c, "VPOP") == 0) {
+        } else if (strcmp(c, "VPOP") == 0) {
             push(t, (void * )VPOP); 
-        } else if (strcmp((char * )c, "ITOL") == 0) {
+        } else if (strcmp(c, "ITOL") == 0) {
             push(t, (void * )ITOL); 
-        } else if (strcmp((char * )c, "LPR") == 0) {
+        } else if (strcmp(c, "LPR") == 0) {
             push(t, (void * )LPR); 
-        } else if (strcmp((char * )c, "DUP") == 0) {
+        } else if (strcmp(c, "DUP") == 0) {
             push(t, (void * )DUP); 
-        } else if (strcmp((char * )c, "SWAP") == 0) {
+        } else if (strcmp(c, "SWAP") == 0) {
             push(t, (void * )SWAP); 
-        } else if (strcmp((char * )c, "ROT") == 0) {
+        } else if (strcmp(c, "ROT") == 0) {
             push(t, (void * )ROT); 
-        } else if (strcmp((char * )c, "_2ROT") == 0) {
+        } else if (strcmp(c, "_2ROT") == 0) {
             push(t, (void * )_2ROT); 
-        } else if (strcmp((char * )c, "CALLS") == 0) {
+        } else if (strcmp(c, "CALLS") == 0) {
             push(t, (void * )CALLS); 
             push(t, dequeue(code)); 
-        } else if (strcmp((char * )c, "TCALLS") == 0) {
+        } else if (strcmp(c, "TCALLS") == 0) {
             push(t, (void * )TCALLS); 
             push(t, dequeue(code)); 
-        } else if (strcmp((char * )c, "RTNS") == 0) {
+        } else if (strcmp(c, "RTNS") == 0) {
             push(t, (void * )RTNS); 
-        } else if (strcmp((char * )c, "LDP") == 0) {
+        } else if (strcmp(c, "LDP") == 0) {
             push(t, (void * )LDP); 
             push(t, chg_byte_code ((Vector * ) dequeue(code), G)); 
-        } else if (strcmp((char * )c, "LDL") == 0) {
+        } else if (strcmp(c, "LDL") == 0) {
             push(t, (void * )LDL); 
             push(t, dequeue(code)); 
         } else {
@@ -492,11 +499,11 @@ void disassy(Vector * code, int indent) {
                 printf("EQ\n");
                 break;  
             case LDG:
-                s = (char * )dequeue(code);
+                s = ((Symbol * )dequeue(code)) -> _table;
                 printf("LDG\t%s\n", s);
                 break;   
             case GSET:
-                s = (char * )dequeue(code);
+                s = ((Symbol * )dequeue(code)) -> _table;
                 printf("GSET\t%s\n", s);
                 break;  
             case SUB:
@@ -638,10 +645,10 @@ int main(int argc, char * argv[]) {
     Stream  * s; 
 
     //primitive関数のセット
-    Hash_put(G,"sum",(void*)sum);
-    Hash_put(G,"list",(void*)list);
-    Hash_put(G,"iprint",(void*)iprint);
-    Hash_put(G,"vprint",(void*)vprint);
+    Hash_put(G, new_symbol("sum", 3), (void*)sum);
+    Hash_put(G, new_symbol("list", 4), (void*)list);
+    Hash_put(G, new_symbol("iprint", 6), (void*)iprint);
+    Hash_put(G, new_symbol("vprint", 6), (void*)vprint);
      // Hash_put(G, "hash_delete", (void * )hash_delete); 
 
     if (argc <= 1 ) s = new_stream(stdin);
