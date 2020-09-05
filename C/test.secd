@@ -1,0 +1,43 @@
+[
+    ldp 
+    [
+        ldl 0 
+        ldl 1 
+        leq 
+        tsel 
+        [
+            ldl 2 
+            rtns
+        ]
+        [
+            ldl 1 
+            ldl 0 
+            ldl 2
+            dec 
+            ldg tak 
+            calls 3
+            ;  
+            ldl 0 
+            ldl 2 
+            ldl 1
+            dec 
+            ldg tak 
+            calls 3
+            ;  
+            ldl 2 
+            ldl 1 
+            ldl 0
+            dec 
+            ldg tak 
+            calls 3
+            ;  
+            ldg tak 
+            tcalls 3 
+            rtns
+        ] 
+        rtns
+    ] 
+    gset tak 
+    stop
+]
+[ldc 0 ldc 8 ldc 19 ldg tak calls 3 stop]
