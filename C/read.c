@@ -251,22 +251,22 @@ Vector *  get_code(Stream * s) {
 enum CODE {STOP,  LDC,  LD,  ADD, CALL,RTN, SEL, JOIN, LDF, SET, LEQ,  LDG, GSET,SUB,   \
            DEC,   TCALL,TSEL,DROP,EQ,  INC, MUL, DIV,  VEC, LDV, VSET, HASH,LDH, HSET,  \
            VPUSH, VPOP, LADD,LSUB,LMUL,ITOL,LPR, PCALL,LDM, DUP, SWAP, ROT, _2ROT,CALLS,\
-           TCALLS,RTNS, LDP, LDL };
+           TCALLS,RTNS, LDP, LDL ,FADD,FSUB,FMUL,FDIV, FPR, ITOF,LCPY };
  //        0      1     2    3    4    5    6    7     8    9    10    11   12   13   
  //        14     15    16   17   18   19   20   21    22   23   24    25   26   27
  //        28     29    30   31   32   33   34   35    36   37   38    39   40   41
- //        42     43    44   45
+ //        42     43    44   45   46   47   48   49    50   60
 
 char code_name[][6] = \
-    {"STOP",  "LDC",  "LD",  "ADD", "CALL","RTN", "SEL","JOIN","LDF","SET","LEQ",  "LDG", "GSET","SUB",   \
-     "DEC",   "TCALL","TSEL","DPOP","EQ",  "INC", "MUL","DIV", "VEC","LDV","VSET", "HASH","LDH", "HSET",  \
-     "VPUSH", "VPOP", "LADD","LSUB","LMUL","ITOL","LPR","PCALL","LDM","DUP","SWAP","ROT","_2ROT","CALLS", \
-     "TCALLS","RTNS", "LDP", "LDL" };
+    {"STOP",  "LDC",  "LD",  "ADD", "CALL","RTN", "SEL", "JOIN", "LDF","SET", "LEQ", "LDG", "GSET", "SUB",   \
+     "DEC",   "TCALL","TSEL","DPOP","EQ",  "INC", "MUL", "DIV",  "VEC","LDV", "VSET","HASH","LDH",  "HSET",  \
+     "VPUSH", "VPOP", "LADD","LSUB","LMUL","ITOL","LPR", "PCALL","LDM","DUP", "SWAP","ROT", "_2ROT","CALLS", \
+     "TCALLS","RTNS", "LDP", "LDL", "FADD","FSUB","FMUL","FDIV", "FPR","ITOF","LCPY" };
 
 int code_pr_size[] = {0, 1, 1, 0, 1, 0, 2, 0, 1, 1, 0, 1, 1, 0, \
                       0, 1, 2, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, \
                       0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, \
-                      1, 0, 1, 1} ;
+                      1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0} ;
 
 void code_optimize(Vector * code, Hash *G){
     char * key;
@@ -419,6 +419,20 @@ Vector * chg_byte_code(Vector * code, Hash * G) {
         } else if (strcmp(c, "LDL") == 0) {
             push(t, (void * )LDL); 
             push(t, dequeue(code)); 
+        } else if (strcmp(c, "FADD") == 0) {
+            push(t, (void * )FADD); 
+        } else if (strcmp(c, "FSUB") == 0) {
+            push(t, (void * )FSUB); 
+        } else if (strcmp(c, "FMUL") == 0) {
+            push(t, (void * )FMUL); 
+        } else if (strcmp(c, "FDIV") == 0) {
+            push(t, (void * )FDIV); 
+        } else if (strcmp(c, "FPR") == 0) {
+            push(t, (void * )FPR); 
+        } else if (strcmp(c, "ITOF") ==0) {
+            push(t, (void * )ITOF);
+        } else if (strcmp(c, "LCPY") ==0) {
+            push(t, (void * )LCPY);
         } else {
             printf("Unknkown Command %s\n", (char * )c); 
             break; 
@@ -588,6 +602,27 @@ void disassy(Vector * code, int indent) {
             case LDL:
                 printf("LDL\t%ld\n", (long)dequeue(code));
                 break ;
+            case FADD:
+                printf("FADD\n");
+                break ;
+            case FSUB:
+                printf("FSUB\n");
+                break ;
+            case FMUL:
+                printf("FMUL\n");
+                break ;
+            case FDIV:
+                printf("FDIV\n");
+                break ;
+            case FPR:
+                printf("FPR\n");
+                break ;
+            case ITOF:
+                printf("ITOF\n");
+                break;
+            case LCPY:
+                printf("LCPY\n");
+                break;
             default:
                 printf("Unknkown Command %s\n", (char * )c); 
                 break; 
@@ -624,33 +659,45 @@ void*vprint(Vector*v) {
     printf("]\n");
     return (void*)v;
 }
+void * lprint(Vector * v) {
+    for(long i=0;i<(long)(v->_sp);i++) gmp_printf("%Zd ",(mpz_ptr)(v->_table[i]));
+    printf("\n"); 
+    }
  /* void * hash_delete(Vector * v){
     Hash * h = (Hash * )v[0]; 
     Symbol * s = (Symbol * )v[1]; 
     Hash_delete(h, s); 
     return NULL; 
 } */ 
- 
+void * _realloc(void * ptr, size_t old_size, size_t new_size) {
+    return GC_realloc(ptr, new_size); 
+}
+
 int main(int argc, char * argv[]) {
     char c; 
+    long v; 
+    FILE * fp; 
+    Stream  * s;
+
+    // mp_set_memory_functions((void * )GC_malloc, (void * )GC_realloc,(void * )GC_free);
+    mp_set_memory_functions((void *)GC_malloc, (void * )_realloc, (void * ) GC_free);
+
     Vector  * code,  * t; 
-    Vector * S = vector_init(500); 
+    Vector * S = vector_init(500000); 
     Vector * E = vector_init(5); 
     Vector * C, * CC ; 
     Vector * R = vector_init(500); 
     Vector * EE = vector_init(50); 
     Hash * G = Hash_init(128); // must be 2^n 
-    long v; 
-    FILE * fp; 
-    Stream  * s; 
 
     //primitive関数のセット
-    Hash_put(G, new_symbol("sum", 3), (void*)sum);
-    Hash_put(G, new_symbol("list", 4), (void*)list);
-    Hash_put(G, new_symbol("iprint", 6), (void*)iprint);
-    Hash_put(G, new_symbol("vprint", 6), (void*)vprint);
+    Hash_put(G, new_symbol("sum", 4), (void*)sum);
+    Hash_put(G, new_symbol("list", 5), (void*)list);
+    Hash_put(G, new_symbol("iprint", 7), (void*)iprint);
+    Hash_put(G, new_symbol("vprint", 7), (void*)vprint);
+    Hash_put(G, new_symbol("lprint", 7), (void*)lprint);
      // Hash_put(G, "hash_delete", (void * )hash_delete); 
-
+    print_hashTable(G); 
     if (argc <= 1 ) s = new_stream(stdin);
     else {
         fp = fopen(argv[1], "r");

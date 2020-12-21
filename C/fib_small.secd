@@ -1,28 +1,28 @@
 [
-    LDF
+    LDP
     [
-        LD  [0 0]
+        LDL 0
         LDC 0
         EQ
         TSEL
         [
-            LD  [0 2]
-            RTN
+            LDL 2
+            RTNS
         ]
         [
-            LD [0 0]
-            DEC
-            LD  [0 1]
-            LD  [0 2]
+            LDL 1
+            LDL 1
+            LDL 2
             LADD
-            LD  [0 1]
+            LDL 0
+            DEC
             LDG fib
-            TCALL 3
-            RTN
+            TCALLS 3
+            RTNS
         ]
-        RTN
+        RTNS
     ]
     GSET fib
     STOP
 ]
-[LDC 1000000 LDC 1 ITOL LDC 0 ITOL LDG fib CALL 3 LPR STOP]
+[LDC 0 ITOL LDC 1 ITOL LDC 100000 LDG fib CALLS 3 LPR STOP]

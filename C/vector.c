@@ -41,7 +41,10 @@ Vector * vector_copy0(Vector * v) {
 void vector_resize(Vector * s) {
     int oldN = s ->_size; 
     int maxN = 3 * oldN / 2 + 1;     /* 1.5倍に拡大  */   
-    void ** table =(void ** )realloc(s ->_table, maxN * sizeof(void * )) ;  
+    void ** table =(void ** )realloc(s ->_table, maxN * sizeof(void * )) ;
+    if (table == NULL)  {
+        printf("reallock failed!\n"); 
+        free(s -> _table); exit(0); }
     s ->_table = table;  
     s ->_size = maxN;
     printf("vector resize:%d to %d\n", oldN, maxN); // vector_print(s);    

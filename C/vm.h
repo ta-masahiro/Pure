@@ -4,9 +4,13 @@
 #include <gc.h>
 #include <gmp.h>
 
-#define malloc(size) GC_malloc(size)
-#define realloc(p, size) GC_realloc(p, size)
-#define calloc(n,m) GC_malloc(n*m)
+// #define malloc(size) GC_malloc(size)
+// #define realloc(p, size) GC_realloc(p, size)
+// #define calloc(n,m) GC_malloc(n*m)
+// #define free GC_free
+#define malloc(size) GC_debug_malloc(size, __FILE__, __LINE__)
+#define realloc(p, size) GC_debug_realloc(p, size, __FILE__, __LINE__)
+#define calloc(n,m) GC_debug_malloc(n*m, __FILE__, __LINE__)
 #define free GC_free
  
 #define TRUE    1

@@ -109,7 +109,7 @@ void  **Hash_get(Hash * hashT, Symbol *key) {
         } else if (memcmp((hashT ->hashTable[ix].key)->_table, key ->_table, key ->_size) == 0) {
             return &(hashT ->hashTable[ix].val);   // 登録あり
         }
-        printf("!!!!\n");
+        //printf("!!!!\n");
     }
     return NULL;
 }

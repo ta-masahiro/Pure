@@ -4,7 +4,7 @@ typedef void*(*Funcpointer)(Vector*);
 enum CODE {STOP,  LDC,  LD,   ADD,  CALL, RTN, SEL, JOIN, LDF, SET, LEQ,  LDG,  GSET, SUB,  \
            DEC,   TCALL,TSEL, DROP, EQ,   INC, MUL, DIV,  VEC, LDV, VSET, HASH, LDH,  HSET, \
            VPUSH, VPOP, LADD, LSUB, LMUL, ITOL,LPR, PCALL,LDM, DUP, SWAP, ROT, _2ROT, CALLS,\
-           TCALLS,RTNS, LDP,  LDL };
+           TCALLS,RTNS, LDP,  LDL,  FADD, FSUB,FMUL,FDIV ,FPR, ITOF,LCPY }; 
  //        0      1      2     3     4     5    6    7     8    9    10    11    12    13 
  //        14     15     16    17    18    19   20   21    22   23   24    25    26    27
  //        28     29     30    31    32    33   34   35    36   37   38    39    40    41
@@ -13,7 +13,7 @@ int op_size[] = \
           {0,    1,     1,    0,    1,    0,   2,   0,    1,   1,   0,    1,    1,    0,    \
            0,    1,     2,    0,    0,    0,   0,   0,    1,   0,   0,    0,    0,    0,    \
            0,    0,     0,    0,    0,    0,   0,   1,    0,   0,   0,    0,    0,    1,    \
-           1,    0,     1,    1 } ;
+           1,    0,     1,    1,    0,    0,   0,   0,    0,   0,   0 }; 
 
 Vector *tosqs(Vector*code, const void** table) {
     enum CODE op;
@@ -46,12 +46,12 @@ void * eval(Vector * S, Vector * E, Vector * Code, Vector * R, Vector * EE, Hash
     mpz_ptr x, y, z;
     enum CODE op;
     Vector *C = vector_copy0(Code),*ssp=vector_init(200);
-
+    double* fx,*fy,*fz;
     static const void * table[] = {
-        &&_STOP,  &&_LDC,  &&_LD,  &&_ADD, &&_CALL,&&_RTN, &&_SEL,&&_JOIN, &&_LDF,&&_SET,&&_LEQ, &&_LDG, &&_GSET,&&_SUB,  \
-        &&_DEC,   &&_TCALL,&&_TSEL,&&_DROP,&&_EQ,  &&_INC, &&_MUL,&&_DIV,  &&_VEC,&&_LDV,&&_VSET,&&_HASH,&&_LDH, &&_HSET, \
-        &&_VPUSH, &&_VPOP, &&_LADD,&&_LSUB,&&_LMUL,&&_ITOL,&&_LPR,&&_PCALL,&&_LDM,&&_DUP,&&_SWAP,&&_ROT, &&_2ROT,&&_CALLS,\
-        &&_TCALLS,&&_RTNS, &&_LDP, &&_LDL };
+        &&_STOP,  &&_LDC,  &&_LD,  &&_ADD, &&_CALL,&&_RTN, &&_SEL, &&_JOIN, &&_LDF,&&_SET, &&_LEQ, &&_LDG, &&_GSET,&&_SUB,  \
+        &&_DEC,   &&_TCALL,&&_TSEL,&&_DROP,&&_EQ,  &&_INC, &&_MUL, &&_DIV,  &&_VEC,&&_LDV, &&_VSET,&&_HASH,&&_LDH, &&_HSET, \
+        &&_VPUSH, &&_VPOP, &&_LADD,&&_LSUB,&&_LMUL,&&_ITOL,&&_LPR, &&_PCALL,&&_LDM,&&_DUP, &&_SWAP,&&_ROT, &&_2ROT,&&_CALLS,\
+        &&_TCALLS,&&_RTNS, &&_LDP, &&_LDL, &&_FADD,&&_FSUB,&&_FMUL,&&_FDIV ,&&_FPR,&&_ITOF,&&_LCPY };
 
     C = tosqs(Code,table);//vector_print(C);
 
@@ -106,22 +106,48 @@ void * eval(Vector * S, Vector * E, Vector * Code, Vector * R, Vector * EE, Hash
     _ADD:
         push(S, (void * )((long)pop(S) + (long)pop(S)));
         goto * dequeue(C);
-        //goto * table[(int)dequeue(C)];                 
+        //goto * table[(int)dequeue(C)];
+    _LCPY:
+        z = (mpz_ptr)malloc(sizeof(MP_INT)); 
+        mpz_init_set(z, (mpz_ptr)pop(S)); 
+        push(S, (void * )z); 
+        goto * dequeue(C);   
+    _FADD:
+        fx=(double*)pop(S);fy=(double*)pop(S);
+        fz = (double * )malloc(sizeof(double)); *fz=*fx+(*fy);
+        push(S,(void*)fz);
+        goto * dequeue(C);
+        //goto * table[(int)dequeue(C)]; 
     _ITOL: 
         z = (mpz_ptr)malloc(sizeof(MP_INT)); 
+        // z = (mpz_ptr)malloc(sizeof(mpz_ptr)); 
         mpz_init_set_si(z, (long)pop(S)); 
         push(S, (void * )z); 
         goto * dequeue(C);
         //goto * table[(int)dequeue(C)];                 
+    _ITOF: 
+        fz = (double*)malloc(sizeof(double)); 
+        *fz=(double)((long)pop(S)); 
+        push(S, (void * )fz); 
+        goto * dequeue(C);
     _LADD:
-        y = (mpz_ptr)(S->_table[--(S->_sp)]); x = (mpz_ptr)(S->_table[(S->_sp)-1]); 
-        mpz_add(x,x,y);
+        y = (mpz_ptr)pop(S); x = (mpz_ptr)pop(S); 
+        // y = (mpz_ptr)(S->_table[--(S->_sp)]); x = (mpz_ptr)(S->_table[(S->_sp)-1]); 
+        z = (mpz_ptr)malloc(sizeof(MP_INT)); 
+        mpz_init(z); 
+        mpz_add(z,x,y);
+        push(S, (void * )z);
         goto * dequeue(C);
         //goto * table[(int)dequeue(C)];                 
     _SUB:
         push(S, (void * )( - (long)pop(S) + (long)pop(S)));
         goto * dequeue(C);
         //goto * table[(int)dequeue(C)];                 
+    _FSUB:
+        fy=(double*)pop(S);fx=(double*)pop(S);
+        *fz=*fx-(*fy);
+        push(S,(void*)fz);
+        goto * dequeue(C);
     _LSUB:
         y = (mpz_ptr)(S->_table[--(S->_sp)]); x = (mpz_ptr)(S->_table[(S->_sp)-1]); 
         mpz_sub(x,x,y);
@@ -140,6 +166,11 @@ void * eval(Vector * S, Vector * E, Vector * Code, Vector * R, Vector * EE, Hash
         push(S, (void * )((long)pop(S) * (long)pop(S)));
         goto * dequeue(C);
         //goto * table[(int)dequeue(C)];                 
+    _FMUL:
+        fx=(double*)pop(S);fy=(double*)pop(S);
+        *fz=*fx*(*fy);
+        push(S,(void*)fz);
+        goto * dequeue(C);
     _LMUL:
         y = (mpz_ptr)(S->_table[--(S->_sp)]); x = (mpz_ptr)(S->_table[(S->_sp)-1]); 
         mpz_mul(x, x, y);
@@ -150,6 +181,11 @@ void * eval(Vector * S, Vector * E, Vector * Code, Vector * R, Vector * EE, Hash
         push(S, (void * )((long)pop(S) / p));
         goto * dequeue(C);
         //goto * table[(int)dequeue(C)];                 
+    _FDIV:
+        fy=(double*)pop(S);fx=(double*)pop(S);
+        *fz=*fx/(*fy);
+        push(S,(void*)fz);
+        goto * dequeue(C);
     _EQ:
         push(S, (void * )(long)((long)pop(S) == (long)pop(S)));
         goto * dequeue(C);
@@ -281,7 +317,10 @@ void * eval(Vector * S, Vector * E, Vector * Code, Vector * R, Vector * EE, Hash
     _DROP:
         pop(S); 
         goto * dequeue(C);
-        //goto * table[(int)dequeue(C)];                 
+        //goto * table[(int)dequeue(C)];
+    _FPR:
+        printf("%f\n", *(double*)(S->_table[(S->_sp) - 1]));         
+        goto * dequeue(C);
     _LPR:
         gmp_printf("%Zd\n", (mpz_ptr)(S->_table[(S->_sp) -1]));
         goto * dequeue(C);
@@ -309,7 +348,8 @@ void * eval(Vector * S, Vector * E, Vector * Code, Vector * R, Vector * EE, Hash
     _CALLS: // small call Eレジスタを使用せず、スタックのみをローカル変数として用いる
         n = (long)dequeue(C);
         push(R, (void * )C);
-        C = vector_copy1((Vector * )pop(S)); 
+         // C = vector_copy1((Vector * )pop(S)); 
+        C = (Vector * )pop(S); C -> _cp = 0;  
         push(ssp,(void*)SSP);
         push(ssp,(void*)(long)S->_sp-n);
         SSP = S->_sp;//for(i=SSP-n;i<SSP;i++) printf(" %ld",(long)S->_table[i]);printf(":S%ld\n",SSP);vector_print(S);
@@ -317,7 +357,8 @@ void * eval(Vector * S, Vector * E, Vector * Code, Vector * R, Vector * EE, Hash
     _TCALLS:// tail small call
         n=(long)dequeue(C);
          // push(R, (void * )C); 
-        C = vector_copy1((Vector * )pop(S)); 
+         // C = vector_copy1((Vector * )pop(S)); 
+        C = (Vector * )pop(S); C -> _cp = 0;  
         //push(ssp,(void*)SSP);
         //push(ssp,(void*)(long)S->_sp-n);
         SSP=S->_sp;//for(i=SSP-n;i<SSP;i++) printf(" %ld",(long)S->_table[i]);printf(":TS%ld\n",SSP);vector_print(S);
